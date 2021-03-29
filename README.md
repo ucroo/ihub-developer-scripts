@@ -8,18 +8,25 @@ You should execute these scripts from the root of the ihub-partner-? repos
 These scripts require that you create a creds folder (by default, in ~/creds - please remember that this will hold credentials, so put it in a safe place.  If you override the location of the creds directory, please modify setEnvForUpload.sh to change the **$CREDS_DIR** location), which contains filesets for each of the flow servers you want to interact with:
 
 ### **$ALIAS**.username
-*(mandatory)*
+*(mandatory)* (unless a **$ALIAS**.token is provided)
 This should contain the username of the user you use to login to flow
 
 example:
 > admin@uni.ucroo.com
 	
 ### **$ALIAS**.password
-*(mandatory)*
+*(mandatory)* (unless a **$ALIAS**.token is provided)
 This should contain the password of the user you use to login to flow
 
 example:
 > ch@ng3m3
+
+### **$ALIAS**.token
+*(mandatory)* (unless both **$ALIAS**.username and **$ALIAS**.password are provided)
+This should contain the token returned from the flow server at /auth/s2s/token/create
+
+example:
+> F123656716395350R1CV_1617054465218
 
 ### **$ALIAS**.flow
 *(optional)*
