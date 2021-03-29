@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 FLOW="$1"
 ENVIRONMENT="$2"
 
@@ -17,9 +17,14 @@ esac
 
 source setEnvForUpload.sh $ENVIRONMENT
 
-if [ -z $COOKIE ]
+if [ -z $FLOW_TOKEN ] ;
 then
-  echo "no valid cookie"
-  return 1
+	if [ -z $COOKIE ]
+	then
+		echo "no valid cookie"
+		return 1
+	fi
+	curl $CURL_ARGS -X GET -H "Cookie: JSESSIONID=$COOKIE" "$HOST/flows/$FLOW"
+else
+	curl $CURL_ARGS -X GET -H "flow-token: $FLOW_TOKEN" "$HOST/flows/$FLOW"
 fi
-curl $CURL_ARGS -X GET -H "Cookie: JSESSIONID=$COOKIE" "$HOST/flows/$FLOW"

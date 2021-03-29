@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ## usage -
 ## $1 is the directory to be combined ( ./build ) 

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ENV_SET=$1
 if [ -z "$ENV_SET" ];
 then
