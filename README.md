@@ -3,6 +3,8 @@ Integration Hub helper scripts
 
 This should be added to your path.
 
+If you're on windows, you may also need to add a zip command to your bash interpreter.  We've often used https://github.com/bmatzelle/gow, but of course any command which will construct a zip should work.  If you do use a different command (bzip or 7zip, for instance, you might need to modify your local uploadResourceCollection.sh and uploadRecipe.sh scripts to use your new zip command), unless that command also answer to 'zip' and uses the same argument structure as the normal terminal zip.
+
 You should execute these scripts from the root of the ihub-partner-? repos
 
 These scripts require that you create a creds folder (by default, in ~/creds - please remember that this will hold credentials, so put it in a safe place.  If you override the location of the creds directory, please modify setEnvForUpload.sh to change the **$CREDS_DIR** location), which contains filesets for each of the flow servers you want to interact with:
