@@ -10,30 +10,19 @@ case $# in
     ENVIRONMENT="local"
     ;;
   *)
-    echo "not enough arguments supplied.  You must supply the flowName to this command, and have a creds/${ENVIRONMENT}.username and creds/${ENVIRONMENT}.password file populated."
+    echo "not enough arguments supplied.  You must supply the recipeDirectory to this command."
     return 1
     ;;
 esac    
 
 source setEnvForUpload.sh $ENVIRONMENT
 
-if [ -z $COOKIE ]
-then
-  echo "no valid cookie"
-  return 1
-fi
-
 rm ${FLOW}.zip
 zip -r ${FLOW}.zip $FLOW
 
 if [ -z $FLOW_TOKEN ] ;
 then
-  if [ -z $COOKIE ]
-  then
-    echo "no valid cookie"
-    return 1
-  fi
-	curl $CURL_ARGS -X POST -H "Cookie: JSESSIONID=$COOKIE" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${FLOW}" "$HOST/repository/recipes" --data-binary "@${FLOW}.zip"
+	return 1
 else
 	curl $CURL_ARGS -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${FLOW}" "$HOST/repository/recipes" --data-binary "@${FLOW}.zip"
 fi

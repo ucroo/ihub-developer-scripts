@@ -17,8 +17,6 @@ esac
 
 API_HOST="https://api.$ENVIRONMENT.ucroo.org"
 HOST="https://flow.$ENVIRONMENT.ucroo.org"
-USER_LOC=$CREDS_DIR/$ENVIRONMENT.username
-PASSWORD_LOC=$CREDS_DIR/$ENVIRONMENT.password
 CURL_LOC=$CREDS_DIR/$ENVIRONMENT.curl
 FLOW_LOC=$CREDS_DIR/$ENVIRONMENT.flow
 API_LOC=$CREDS_DIR/$ENVIRONMENT.api
@@ -46,65 +44,7 @@ if [ -f $FLOW_TOKEN_LOC ]
 then
 	export FLOW_TOKEN=$(cat $FLOW_TOKEN_LOC)
 	echo "using token" 
-##	CURL_ARGS="$CURL_ARGS -H \"flow-token: $FLOW_TOKEN\" "
-##	echo "new curl args: $CURL_ARGS "
 else
-	echo "using username and password"
-	COOKIE_NAME="COOKIE_$ENVIRONMENT"
-	COOKIE=${!COOKIE_NAME}
-	if [ -z $COOKIE ]
-	then
-			echo "trying to get new cookie"
-			USERNAME=$(cat $USER_LOC)
-			PASSWORD=$(cat $PASSWORD_LOC)
-			if [ -z $USERNAME ]
-			then
-					echo "please store the username in $USER_LOC"
-			else
-					if [ -z $PASSWORD ]
-					then
-							echo "please store the password in $PASSWORD_LOC"
-					else
-							COOKIE=$(curl -X POST --data-urlencode "username=$USERNAME" --data-urlencode "password=$PASSWORD" -H "Content-Type: application/x-www-form-urlencoded" $CURL_ARGS "$HOST/login/credentials/jsessionId/")
-							COOKIE_TEST=$(curl --write-out %{http_code} --silent --output /dev/null -X GET -H "Cookie: JSESSIONID=$COOKIE" $CURL_ARGS "$HOST/login/currentlyLoggedIn")
-							if [ $COOKIE_TEST -ne 200 ]
-							then
-									unset COOKIE
-									echo "failed to get cookie with supplied username and password"
-							else
-									export COOKIE_$ENVIRONMENT=$COOKIE
-							fi
-					fi
-			fi
-	else
-			COOKIE_TEST=$(curl --write-out %{http_code} --silent --output /dev/null -X GET -H "Cookie: JSESSIONID=$COOKIE" $CURL_ARGS "$HOST/login/currentlyLoggedIn")
-			if [ $COOKIE_TEST -ne 200 ]
-			then
-					echo "unsetting previous unhealthy cookie ($COOKIE_TEST)."
-					unset COOKIE_$ENVIRONMENT
-					echo "trying to get new cookie"
-					USERNAME="$(cat $USER_LOC)"
-					PASSWORD="$(cat $PASSWORD_LOC)"
-					if [ -z $USERNAME ]
-					then
-							echo "please store the username in $USER_LOC"
-					else
-							if [ -z $PASSWORD ]
-							then
-									echo "please store the password in $PASSWORD_LOC"
-							else
-									COOKIE=$(curl -X POST --data-urlencode "username=$USERNAME" --data-urlencode "password=$PASSWORD" -H "Content-Type: application/x-www-form-urlencoded" $CURL_ARGS "$HOST/login/credentials/jsessionId/")
-									if [ $COOKIE_TEST -ne 200 ]
-									then
-											echo "failed to get cookie with supplied username and password"
-									else
-											export COOKIE_$ENVIRONMENT=$COOKIE
-									fi
-							fi
-					fi
-			else
-					echo "previous healthy cookie found."
-			fi
-	fi;
-
+	echo "no available flow token.  You must have a $CREDS_DIR/$ENVIRONMENT.token file populated with an active flow access token from the server."
+	return 1
 fi
