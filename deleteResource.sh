@@ -1,16 +1,17 @@
 #!/bin/bash
-FLOW="$1"
-ENVIRONMENT="$2"
+RESID="$1"
+RESCOL="$2"
+ENVIRONMENT="$3"
 
 case $# in
-  2)
-    ENVIRONMENT="$2"
+  3)
+    ENVIRONMENT="$3"
     ;;
-  1)
+  2)
     ENVIRONMENT="local"
     ;;
   *)
-    echo "not enough arguments supplied.  You must supply the flowName to this command."
+    echo "not enough arguments supplied.  You must supply the resourceId and resourceCollectionId to this command."
     return 1
     ;;
 esac    
@@ -21,5 +22,5 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	curl $CURL_ARGS -X DELETE -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/resources/$FLOW" 
+	curl $CURL_ARGS -X DELETE -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/resourceCollections/$RESCOL/resources/$RESID" 
 fi
