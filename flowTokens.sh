@@ -10,13 +10,13 @@
 
 function usage() {
     >&2 echo "usage: $(basename $0) COMMAND [TOKEN]"
-    >&2 echo "Commands:"
-    >&2 echo "  list             - lists all tokens"
-    >&2 echo "  list-active      - lists active tokens"
-    >&2 echo "  list-inactive    - lists inactive tokens"
-    >&2 echo "  activate TOKEN   - activates the specified token"
-    >&2 echo "  deactivate TOKEN - deactivates the specified token"
-    >&2 echo "  create TOKEN     - creates a token with the the specified name"
+    >&2 echo "Commands (and aliases):"
+    >&2 echo "  list              - lists all tokens (ls)"
+    >&2 echo "  list-active       - lists active tokens (la)"
+    >&2 echo "  list-inactive     - lists inactive tokens (li)"
+    >&2 echo "  activate TOKEN    - activates the specified token (a)"
+    >&2 echo "  deactivate TOKEN  - deactivates the specified token (d)"
+    >&2 echo "  create TOKEN      - creates a token with the the specified name (c)"
     exit 1
 }
 
@@ -27,7 +27,7 @@ creds_dir=$HOME/creds
 
 case $command in
 
-    activate)
+    activate|a)
         [ "$#" -eq "2" ] || usage
         token=$2
         if [ -e "$creds_dir/_${token}.token" ]; then
@@ -38,7 +38,7 @@ case $command in
         fi
         ;;
 
-    create)
+    create|c)
         [ "$#" -eq "2" ] || usage
         token=$2
         if [ -e "$creds_dir/${token}.token" ] || [ -e "$creds_dir/_${token}.token" ]; then
@@ -51,7 +51,7 @@ case $command in
         fi
         ;;
 
-    deactivate)
+    deactivate|d)
         [ "$#" -eq "2" ] || usage
         token=$2
         if [ -e "$creds_dir/${token}.token" ]; then
@@ -62,17 +62,17 @@ case $command in
         fi
         ;;
 
-     list)
+     list|ls)
          [ "$#" -eq "1" ] || usage
          (cd $creds_dir ; ls -1 *.token | sed -r "s/^_(.*)\.token/\1 (inactive)/" | sed -r "s/^([^_].*)\.token/\1/" )
           ;;
 
-     list-active)
+     list-active|la)
          [ "$#" -eq "1" ] || usage
          (cd $creds_dir ; ls -1 *.token | grep -v "^_" | sed -r "s/(.*)\.token/\1/" )
           ;;
 
-     list-inactive)
+     list-inactive|li)
          [ "$#" -eq "1" ] || usage
          (cd $creds_dir ; ls -1 _*.token | sed -r "s/_(.*)\.token/\1/" )
           ;;
