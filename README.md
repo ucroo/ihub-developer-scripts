@@ -47,6 +47,15 @@ example:
 
 > https://api.my.uni.ucroo.edu
 
+
+# Script: auditCustomerRepos.sh
+
+This script file is designed to examine one or more customer repositories and run various checks on them.  It is a small shell script that calls the auditCustomerRepos.py python script after ensuring that python version 3 is installed and that all dependencies for the python script are installed too.
+
+If you have a directory where you clone your customer GitHub repositories, that is the ideal directory to run this script from.  It will recurse into all repositories and audit them.
+
+For example, the current auditCustomerRepos.py file will examine shared config for potentially insecure secrets.
+
 </br>
 
 # Next Steps
@@ -94,3 +103,4 @@ These scripts are written in bash. Scripts require certain arguments. Below are 
 <b>Notes:</b> If you want to upload to local development, leaving off the 2nd argument default to local staging.
 
 </details>
+
