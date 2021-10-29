@@ -49,7 +49,7 @@ function find_command() {
 function org_clone_urls() {
     org_name=$1
     # -sS will turn off the progress bar
-    curl -sS -H "Authorization: token $GITHUB_API_TOKEN" https://api.github.com/orgs/$org_name/repos?per_page=500 | jq '.[] | .clone_url' | grep -e "partner-\|community-\|customer-"
+    curl -sS -H "Authorization: token $GITHUB_API_TOKEN" https://api.github.com/orgs/$org_name/repos?per_page=500 | jq '.[] | .clone_url' | grep -e "ihub-partner-\|ihub-community-\|ihub-customer-"
 }
 
 function clone_or_update_org_repos() {
@@ -76,10 +76,10 @@ function clone_or_update_org_repos() {
     done
 }
 
-[ "$#" = "3" ] || usage
+[ "$#" = "2" ] || [ "$#" = "3" ] || usage
 user_name=$1
 directory=$2
-depth=$3
+depth=${3:-"deep"}
 
 [ "$depth" = "shallow" ] || [ "$depth" = "deep" ] || usage
 
