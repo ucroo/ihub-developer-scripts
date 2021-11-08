@@ -55,6 +55,7 @@ These scripts are written in bash. Scripts require certain arguments. Below are 
 
 <details>
 <summary><b>uploadSharedConfig</b></summary>
+
 <b>Action:</b> Uploads all shared config objects within the JSON file specified within the project flow directory to the environment specified.
 
 <b>Instruction:</b> to be called from the root of the project.
@@ -69,6 +70,7 @@ These scripts are written in bash. Scripts require certain arguments. Below are 
 </br>
 <details>
 <summary><b>uploadFlow</b></summary>
+
 <b>Action:</b> Uploads all flow objects within the JSON file specified within the project flow directory to the environment specified.
 
 <b>Instruction:</b> to be called from the root of the project.
@@ -83,6 +85,7 @@ These scripts are written in bash. Scripts require certain arguments. Below are 
 </br>
 <details>
 <summary><b>uploadTrigger</b></summary>
+
 <b>Action:</b> Uploads all trigger objects within the JSON file specified within the project flow directory to the environment specified.
 
 <b>Instruction:</b> to be called from the root of the project.
@@ -92,5 +95,25 @@ These scripts are written in bash. Scripts require certain arguments. Below are 
 > uploadTrigger.sh uni uni
 
 <b>Notes:</b> If you want to upload to local development, leaving off the 2nd argument default to local staging.
+</details>
+</br>
+<details>
+  <summary><b>validateRecipe</b></summary>
 
+  <b>Action:</b>
+
+  Examines recipes for some common problems like a JSON syntax error, a missing,
+  required JSON property that is , a misspelled directory name, etc.
+
+  <b>Instruction:</b> to be called from the recipes directory of the project.
+
+  <b>Example:</b>
+
+  > validateRecipe.sh canvas_connector\_1\_0\_0
+
+  <b>Notes:</b> If the script succeeds, its exit code will be 0. If there are
+  any errors, the errors will be printed and the exit code will be greater than
+  0.
+
+  This script calls a Python script so it requires Python 3.6 or higher to run.  If Python is installed, this script will download some Python libraries it depends on and install them under the scripts/.venv directory.
 </details>
