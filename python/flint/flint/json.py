@@ -6,6 +6,7 @@ import json
 import yaml
 
 import jsonschema
+import jmespath
 
 from flint import LintContext, Lintable
 
@@ -34,46 +35,29 @@ def try_as_int(s: str) -> Union[str, int]:
 
 
 class JsonPath:
-    def __init__(self, elements: List[JsonPathElement]) -> None:
-        self.elements = list(elements)
+    def __init__(self, query: str) -> None:
+        self.query = query
 
     @staticmethod
-    def compile(s: str) -> "JsonPath":
-        elements = [try_as_int(x) for x in s.split("/") if x]
-        if not elements:
-            raise ValueError(f"could not compile '{s}' into JsonPath")
-        return JsonPath(elements)
+    def compile(query: str) -> "JsonPath":
+        return JsonPath(jmespath.compile(query))
 
     def matches(self, context: LintContext, json_object: JSON) -> List[JSON]:
-        current = [json_object]
-        try:
-            for element in self.elements:
-                # Array index
-                if isinstance(element, int):
-                    if isinstance(current[0], list):
-                        current = [x[element] for x in current]
-                    else:
-                        return []
-                # Object property lookup
-                elif isinstance(element, str):
-                    if isinstance(current[0], dict):
-                        current = [x[element] for x in current]
-                    elif isinstance(current[0], list):
-                        if element == "*":
-                            current = [elem for elems in current for elem in elems]
-                    else:
-                        return []
-        except KeyError as ex:
-            context.error(f"could not find key: {ex}")
-        return current
+        result = self.query.search(json_object)
+        print("MATCHES: ", result)
+        return result
 
     def __str__(self) -> str:
-        return "/".join(self.elements)
+        return self.query
 
 
 class _JsonCollectValues(JsonRule):
     def __init__(
-        self, json_path: JsonPath, group: str, key: str, optional: bool = False
+        self,
+        json_path: JsonPath,
+        group: str,
+        key: str,
+        optional: bool = False
     ) -> None:
         self.json_path = json_path
         self.group = group
@@ -87,6 +71,7 @@ class _JsonCollectValues(JsonRule):
         context.extend_property(self.group, self.key, found)
         if not self.optional and not found:
             context.error(f"JsonPath {self.json_path} did not match any elements")
+        print("LINT RESULT:", context.properties[self.group][self.key])
 
 
 class _JsonFollowsSchema(JsonRule):

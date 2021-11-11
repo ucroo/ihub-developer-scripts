@@ -6,6 +6,7 @@ setup(
     packages=['flint',],
     install_requires=[
         "jsonschema",
-        "PyYAML"
+        "PyYAML",
+        "jmespath"
         ]
 )
