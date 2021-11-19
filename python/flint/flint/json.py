@@ -6,7 +6,7 @@ import json
 import yaml
 
 import jsonschema
-import jmespath
+import jq
 
 from flint import LintContext, Lintable
 
@@ -36,15 +36,15 @@ def try_as_int(s: str) -> Union[str, int]:
 
 class JsonPath:
     def __init__(self, query: str) -> None:
+        assert query
         self.query = query
 
     @staticmethod
     def compile(query: str) -> "JsonPath":
-        return JsonPath(jmespath.compile(query))
+        return JsonPath(jq.compile(query))
 
     def matches(self, context: LintContext, json_object: JSON) -> List[JSON]:
-        result = self.query.search(json_object)
-        print("MATCHES: ", result)
+        result = self.query.input(json_object)
         return result
 
     def __str__(self) -> str:
@@ -65,13 +65,14 @@ class _JsonCollectValues(JsonRule):
         self.optional = optional
 
     def lint(self, json_obj: JSON, context: LintContext) -> None:
-        found = []
-        for match in self.json_path.matches(context, json_obj):
-            found.append(match)
-        context.extend_property(self.group, self.key, found)
-        if not self.optional and not found:
+        matches = self.json_path.matches(context, json_obj)
+        for match in matches:
+            if isinstance(match, list):
+                context.extend_property(self.group, self.key, match)
+            else:
+                context.append_property(self.group, self.key, match)
+        if not self.optional and not matches:
             context.error(f"JsonPath {self.json_path} did not match any elements")
-        print("LINT RESULT:", context.properties[self.group][self.key])
 
 
 class _JsonFollowsSchema(JsonRule):

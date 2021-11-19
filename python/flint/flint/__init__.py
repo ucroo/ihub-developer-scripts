@@ -161,8 +161,10 @@ class LintContext:
         self.properties[group][key] = current_value + [value]
 
     def extend_property(self, group: str, key: str, values: List[Any]) -> None:
+        assert values
         current_value = self.get_property(group, key, [])
-        self.properties[group][key] = current_value + values
+        current_value.extend(values)
+        self.properties[group][key] = current_value
 
 
 class Lintable(ABC):
