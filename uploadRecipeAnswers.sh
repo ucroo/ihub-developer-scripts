@@ -22,5 +22,19 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	curl $CURL_ARGS -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/recipes/$RECIPE/execute" --data-binary "@$ANSWER"
+	http_response=$(curl $CURL_ARGS -s -o uploadRecipeAnswersResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/recipes/$RECIPE/execute" --data-binary "@$ANSWER")
 fi
+
+if [ $http_response != "200" ];
+then
+  if [ $http_response == "302" ];
+  then
+    echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
+  else
+    echo "Got unexpected HTTP response ${http_response}. This is likely an error."
+  fi
+else
+  cat uploadRecipeAnswersResponse.txt
+fi
+
+rm uploadRecipeAnswersResponse.txt
