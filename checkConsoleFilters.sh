@@ -38,18 +38,23 @@ compareValue() {
 }
 
 main() {
+    # Print out console filters that match the following
+    # undesirable conditions.
     valueNotEqualTo error true
-    valueEqualTo synchronous true
     valueEqualTo debug true
     valueEqualTo info true
     valueEqualTo warn true
     valueEqualTo other true
+    valueEqualTo synchronous true
     valueEqualTo forceStreams true
     valueEqualTo sendToCentralReporter true
     valueEqualTo summarizeToCentral true
     valueEqualTo saveStateToDb true
     valueEqualTo consoleMessageSynchronous true
     valueEqualTo logPayload true
+    valueEqualTo logStart true
+    valueEqualTo logMiddle true
+    valueEqualTo logEnd true
 }
 
 main
