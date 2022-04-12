@@ -21,5 +21,19 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	curl $CURL_ARGS -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/sharedConfig" --data-binary "@src/main/sharedConfig/$FLOW.json"
+	http_response=$(curl $CURL_ARGS -s -o uploadSharedConfigResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/sharedConfig" --data-binary "@src/main/sharedConfig/$FLOW.json")
 fi
+
+if [ $http_response != "200" ];
+then
+  if [ $http_response == "302" ];
+  then
+    echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
+  else
+    echo "Got unexpected HTTP response ${http_response}. This is likely an error."
+  fi
+else
+  cat uploadSharedConfigResponse.txt
+fi
+
+rm uploadSharedConfigResponse.txt
