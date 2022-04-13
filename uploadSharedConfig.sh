@@ -36,4 +36,4 @@ else
   cat uploadSharedConfigResponse.txt
 fi
 
-rm uploadSharedConfigResponse.txt
+[ -e uploadSharedConfigResponse.txt ] && rm uploadSharedConfigResponse.txt

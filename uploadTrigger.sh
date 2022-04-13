@@ -36,4 +36,4 @@ else
   cat uploadTriggerResponse.txt
 fi
 
-rm uploadTriggerResponse.txt
+[ -e uploadTriggerResponse.txt ] && rm uploadTriggerResponse.txt

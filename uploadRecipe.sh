@@ -39,5 +39,5 @@ else
   cat uploadRecipeResponse.txt
 fi
 
-rm uploadRecipeResponse.txt
+[ -e uploadRecipeResponse.txt ] && rm uploadRecipeResponse.txt
 rm ${FLOW}.zip

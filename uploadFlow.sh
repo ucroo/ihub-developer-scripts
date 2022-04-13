@@ -36,4 +36,4 @@ else
   cat uploadFlowResponse.txt
 fi
 
-rm uploadFlowResponse.txt
+[ -e uploadFlowResponse.txt ] && rm uploadFlowResponse.txt

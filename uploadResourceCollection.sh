@@ -39,5 +39,5 @@ else
   cat uploadResourceCollectionResponse.txt
 fi
 
-rm uploadResourceCollectionResponse.txt
+[ -e uploadResourceCollectionResponse.txt ] && rm uploadResourceCollectionResponse.txt
 rm ${FLOW}.zip

@@ -42,4 +42,4 @@ else
   cat uploadSharedConfigFragmentResponse.txt
 fi
 
-rm uploadSharedConfigFragmentResponse.txt
+[ -e uploadSharedConfigFragmentResponse.txt ] && rm uploadSharedConfigFragmentResponse.txt

@@ -37,4 +37,4 @@ else
   cat uploadRecipeAnswersResponse.txt
 fi
 
-rm uploadRecipeAnswersResponse.txt
+[ -e uploadRecipeAnswersResponse.txt ] && rm uploadRecipeAnswersResponse.txt
