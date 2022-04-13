@@ -36,4 +36,4 @@ else
   cat uploadResourceCollectionJsonResponse.txt
 fi
 
-rm uploadResourceCollectionJsonResponse.txt
+[ -e uploadResourceCollectionJsonResponse.txt ] && rm uploadResourceCollectionJsonResponse.txt

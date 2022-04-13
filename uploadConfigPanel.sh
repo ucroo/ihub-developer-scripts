@@ -36,4 +36,4 @@ else
   cat uploadConfigPanelResponse.txt
 fi
 
-rm uploadConfigPanelResponse.txt
+[ -e uploadConfigPanelResponse.txt ] && rm uploadConfigPanelResponse.txt
