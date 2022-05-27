@@ -94,3 +94,15 @@ These scripts are written in bash. Scripts require certain arguments. Below are 
 <b>Notes:</b> If you want to upload to local development, leaving off the 2nd argument default to local staging.
 
 </details>
+
+# Downloading Flow Entities
+
+If you need to download all of a flow server's entities (flows, resources, triggerers, shared config), then run the following script:
+
+```
+downloadFlowEntities.sh ENV
+```
+
+This will create a `src` directory in the directory where you ran the script containing all of the flow's entities.
+
+Note: This script requires `python3`.
