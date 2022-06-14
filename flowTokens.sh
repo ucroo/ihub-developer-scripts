@@ -17,6 +17,7 @@ function usage() {
     >&2 echo "  activate TOKEN    - activates the specified token (a)"
     >&2 echo "  deactivate TOKEN  - deactivates the specified token (d)"
     >&2 echo "  create TOKEN      - creates a token with the the specified name (c)"
+    >&2 echo "  update TOKEN      - updates a token with the the specified name (u)"
     exit 1
 }
 
@@ -35,6 +36,19 @@ case $command in
             echo "Activated token: $token"
         else
             >&2 echo "Could not find inactive token: $token"
+        fi
+        ;;
+
+    update|u)
+        [ "$#" -eq "2" ] || usage
+        token=$2
+        if [ -e "$creds_dir/${token}.token" ] ; then
+            echo -n "Enter token value: "
+            read token_value
+            echo $token_value > $creds_dir/$token.token
+            echo "Updated token: $token"
+        else
+            >&2 echo "Token does not exist: $token"
         fi
         ;;
 
