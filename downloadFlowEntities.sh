@@ -23,8 +23,9 @@ mkdir -p src/main/{flows,flowResources,sharedConfig,triggerers}
 
 function downloadJsonFile {
     entityType=$1
-    outputDirectory=${2:-$1}
-    output=$(curl "${HOST}/repository/${entityType}" \
+    outputDirectory=$2
+    params=${3:-}
+    output=$(curl "${HOST}/repository/${entityType}${params}" \
                 -w "\nStatus: %{http_code}"          \
                 -H "flow-token: ${FLOW_TOKEN}"       \
                 -H "Accept: application/json"        \
@@ -53,16 +54,16 @@ function downloadZipFile {
                   --no-progress-meter                     \
                   > "${outputFile}" ; then
         if [ -r "${outputFile}" ] ; then
-            unzip "${outputFile}" -o -d "./src/main/${outputDirectory}/" >& /dev/null || true
+            unzip -o "${outputFile}" -d "./src/main/${outputDirectory}/" >& /dev/null || true
             rm "${outputFile}"
         fi
    fi
 }
 
-#                Flow Route            Directory (if different)
-#                -------------------   --------------------------
-downloadJsonFile flows
-downloadJsonFile sharedConfig
+#                Flow Route            Directory        Query String Parameters
+#                -------------------   ------------     ---------------------------
+downloadJsonFile flows                 flows
+downloadJsonFile sharedConfig          sharedConfig     '?encrypted_only=true'
 downloadJsonFile flowTriggerers        triggerers
 downloadZipFile  resourceCollections   flowResources
 
