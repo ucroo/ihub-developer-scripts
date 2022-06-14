@@ -53,7 +53,7 @@ function downloadZipFile {
                   --no-progress-meter                     \
                   > "${outputFile}" ; then
         if [ -r "${outputFile}" ] ; then
-            unzip "${outputFile}" -d "./src/main/${outputDirectory}/" >& /dev/null || true
+            unzip "${outputFile}" -o -d "./src/main/${outputDirectory}/" >& /dev/null || true
             rm "${outputFile}"
         fi
    fi
