@@ -114,7 +114,7 @@ def format_javascript(body) -> str:
     return '\n'.join([line.rstrip()
                       for line in (body.strip()
                                    .replace("\\n", "\n")
-                                   .replace("\\", '\\\\')
+                                   .replace('"', '\\"')
                                    .split('\n'))])
 
 
