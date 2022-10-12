@@ -37,10 +37,11 @@ mkdir -p src/main/{flows,flowResources,sharedConfig,triggerers,patchSets}
 function downloadJsonFile {
     entityType=$1
     outputDirectory=${2:-$1}
-    output=$(curl "${HOST}/repository/${entityType}" \
-                -w "\nStatus: %{http_code}"          \
-                -H "flow-token: ${FLOW_TOKEN}"       \
-                -H "Accept: application/json"        \
+    parameters=${3:-}
+    output=$(curl "${HOST}/repository/${entityType}${parameters}" \
+                -w "\nStatus: %{http_code}"                       \
+                -H "flow-token: ${FLOW_TOKEN}"                    \
+                -H "Accept: application/json"                     \
                 --no-progress-meter)
 
     if [[ "${output}" =~ "Status: 200" ]] ; then
