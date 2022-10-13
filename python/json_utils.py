@@ -116,19 +116,6 @@ def fix_json(json_text: str) -> str:
 
 
 def format_javascript(body) -> str:
-# <<<<<<< Updated upstream
-#     return '\n'.join([line.rstrip()
-#                       for line in (body.strip()
-#                                    .replace("\\n", "\n")
-#                                    .replace("\\", '\\\\')
-#                                    .split('\n'))])
-# ||||||| Stash base
-#     return '\n'.join([line.rstrip()
-#                       for line in (body.strip()
-#                                    .replace("\\n", "\n")
-#                                    .replace('"', '\\"')
-#                                    .split('\n'))])
-# =======
     if body:
         result = '\n'.join([line.rstrip()
                         for line in (body.strip()
@@ -137,7 +124,6 @@ def format_javascript(body) -> str:
                                     .split('\n'))])
         return result
     return ''
-#>>>>>>> Stashed changes
 
 
 def format_json_text(json_text: str) -> str:
