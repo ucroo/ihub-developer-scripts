@@ -16,6 +16,7 @@ function usage() {
     >&2 echo "  list-inactive     - lists inactive tokens (li)"
     >&2 echo "  activate TOKEN    - activates the specified token (a)"
     >&2 echo "  deactivate TOKEN  - deactivates the specified token (d)"
+    >&2 echo "  update TOKEN      - updates the specified token (u)"
     >&2 echo "  create TOKEN      - creates a token with the the specified name (c)"
     exit 1
 }
@@ -27,12 +28,32 @@ creds_dir=$HOME/creds
 
 case $command in
 
+    update|u)
+        [ "$#" -eq "2" ] || usage
+        token=$2
+        if [ -e "$creds_dir/${token}.token" ] || [ -e "$creds_dir/_${token}.token" ]; then
+            echo -n "Enter token value: "
+            read token_value
+            if [ -e "$creds_dir/${token}.token" ] ; then
+                echo $token_value > $creds_dir/$token.token
+                echo "Updated active token: $token"
+            elif [ -e "$creds_dir/_${token}.token" ]; then
+                echo $token_value > $creds_dir/_$token.token
+                echo "Updated inactive token: $token"
+            fi
+        else
+            >&2 echo "Token does not exist.  Please create it."
+        fi
+        ;;
+
     activate|a)
         [ "$#" -eq "2" ] || usage
         token=$2
         if [ -e "$creds_dir/_${token}.token" ]; then
-            mv $creds_dir/{_,}${token}.token 
+            mv $creds_dir/{_,}${token}.token
             echo "Activated token: $token"
+        elif [ -e "$creds_dir/${token}.token" ]; then
+            echo "Token is already active: $token"
         else
             >&2 echo "Could not find inactive token: $token"
         fi
@@ -41,8 +62,10 @@ case $command in
     create|c)
         [ "$#" -eq "2" ] || usage
         token=$2
-        if [ -e "$creds_dir/${token}.token" ] || [ -e "$creds_dir/_${token}.token" ]; then
-            >&2 echo "Token already exists: $token"
+        if [ -e "$creds_dir/${token}.token" ] ; then
+            >&2 echo "Token already exists and is active: $token"
+        elif [ -e "$creds_dir/_${token}.token" ]; then
+            >&2 echo "Token already exists and is inactive: $token"
         else
             echo -n "Enter token value: "
             read token_value
@@ -55,8 +78,10 @@ case $command in
         [ "$#" -eq "2" ] || usage
         token=$2
         if [ -e "$creds_dir/${token}.token" ]; then
-            mv $creds_dir/{,_}${token}.token 
+            mv $creds_dir/{,_}${token}.token
             echo "Deactivated token: $token"
+        elif [ -e "$creds_dir/_${token}.token" ]; then
+            echo "Token is already inactive: $token"
         else
             >&2 echo "Could not find active token: $token"
         fi
