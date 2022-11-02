@@ -48,8 +48,8 @@ function downloadJsonFile {
         outputFile="./src/main/${outputDirectory}/${environment}.json"
         if echo "${output}" | grep -v "Status: "| jq empty >& /dev/null ; then
             echo "${output}" | grep -v "Status: " > "${outputFile}"
-            noMetaData=$(jq 'del(.[].metadata)' "${outputFile}")
-            echo "${noMetaData}" > "${outputFile}"
+            filtered=$(jq 'del(.[].metadata, .[].referencedBy)' "${outputFile}")
+            echo "${filtered}" > "${outputFile}"
         else
             >&2 echo "server did not return valid JSON.  Is your token valid?"
             return 1
@@ -73,6 +73,8 @@ function downloadZipFile {
             rm "${outputFile}"
             # Use jq to format the JSON files that were in the zip file.
             while IFS= read -r -d '' jsonFile ; do
+                filtered=$(jq 'del(.metadata)' "${jsonFile}")
+                echo "${filtered}" > "${jsonFile}"
                 cat <<< "$(jq < "${jsonFile}")" > "${jsonFile}"
             done < <(find "./src/main/${outputDirectory}" -iname '*.json' -print0)
         fi
