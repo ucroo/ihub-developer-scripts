@@ -11,6 +11,7 @@ require() {
     command -v "$1" > /dev/null || die "$1 is not in the \$PATH"
 }
 
+require python3
 require curl
 require jq
 
