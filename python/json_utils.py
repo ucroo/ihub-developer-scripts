@@ -55,15 +55,20 @@ class _JsonFixer:
         self.stack = _Stack()
         self.stack.push(_State.INIT)
         self.output = io.StringIO()
+        self.escaped = False
 
     def on_character(self, c: str) -> None:
-        self.position.on_character(c)
+        escaped = self.escaped
+        if escaped:
+            self.escaped = False
         if self.stack.current() in (_State.STRING_DOUBLE, _State.STRING_SINGLE):
+            if c == '\\':
+                self.escaped = True
             if c == '\n':
                 c = '\\n'
             elif c == '\t':
                 c = '\\t '
-            elif _JsonFixer._string_type(c) == self.stack.current():
+            elif not escaped and _JsonFixer._string_type(c) == self.stack.current():
                 self.stack.pop()
         elif c == '[':
             self.stack.push(_State.ARRAY)
@@ -107,15 +112,18 @@ def fix_json_file(filename: str, in_place: Optional[bool]=False) -> str:
 
 
 def fix_json(json_text: str) -> str:
-        return _JsonFixer().fix_json(json_text)
+    return _JsonFixer().fix_json(json_text)
 
 
 def format_javascript(body) -> str:
-    return '\n'.join([line.rstrip()
-                      for line in (body.strip()
-                                   .replace("\\n", "\n")
-                                   .replace("\\", '\\\\')
-                                   .split('\n'))])
+    if body:
+        result = '\n'.join([line.rstrip()
+                        for line in (body.strip()
+                                    .replace('\\', '\\\\')
+                                    .replace('"', '\\"')
+                                    .split('\n'))])
+        return result
+    return ''
 
 
 def format_json_text(json_text: str) -> str:
@@ -138,8 +146,13 @@ def _format_dict(json_dict, string_io: io.StringIO, level: int) -> None:
             string_io.write(",")
         first = False
         string_io.write(_indent(f'"{key}": ', level + 1))
-        javascript_properties = ('jsFunc', )
-        if key in javascript_properties:
+        javascript_properties = (
+            'jsFunc',
+            'testDataTransformFunc',
+            'testData',
+            'assertionFunc'
+        )
+        if value and (key in javascript_properties):
             js_code = format_javascript(value)
             string_io.write('"')
             string_io.write(_indent(f'{js_code}\n"', 0))
@@ -172,6 +185,7 @@ def format_json(json_object: str, string_io: io.StringIO, level: int) -> None:
     elif isinstance(json_object, list):
         _format_list(json_object, string_io, level)
     elif isinstance(json_object, str):
+        json_object = json_object.replace('\\', '\\\\').replace('"', '\\"')
         string_io.write(f'"{json_object}"')
     elif isinstance(json_object, float):
         string_io.write(str(json_object))
