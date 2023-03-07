@@ -70,7 +70,7 @@ function downloadZipFile {
                   --no-progress-meter                     \
                   > "${outputFile}" ; then
         if [ -r "${outputFile}" ] ; then
-            unzip "${outputFile}" -d "./src/main/${outputDirectory}/" > /dev/null || true
+            unzip -o "${outputFile}" -d "./src/main/${outputDirectory}/" > /dev/null || true
             rm "${outputFile}"
             # Use jq to format the JSON files that were in the zip file.
             while IFS= read -r -d '' jsonFile ; do
