@@ -85,7 +85,7 @@ function downloadZipFile {
 #                Flow Route            Directory        Query String Parameters
 #                -------------------   ------------     ---------------------------
 downloadJsonFile flows                 flows
-downloadJsonFile sharedConfig          sharedConfig     '?encrypted=true'
+downloadJsonFile sharedConfig          sharedConfig     '?encrypted_only=true'
 downloadJsonFile flowTriggerers        triggerers
 downloadJsonFile patchSets             patchSets
 downloadZipFile  resourceCollections   flowResources
