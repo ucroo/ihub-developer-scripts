@@ -153,9 +153,12 @@ def _format_dict(json_dict, string_io: io.StringIO, level: int) -> None:
             'assertionFunc'
         )
         if value and (key in javascript_properties):
-            js_code = format_javascript(value)
-            string_io.write('"')
-            string_io.write(_indent(f'{js_code}\n"', 0))
+            try:
+                js_code = format_javascript(value)
+                string_io.write('"')
+                string_io.write(_indent(f'{js_code}\n"', 0))
+            except:
+                format_json(value, string_io, level + 1)
         else:
             format_json(value, string_io, level + 1)
     if json_dict:
