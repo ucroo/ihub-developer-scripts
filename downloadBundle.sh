@@ -36,6 +36,6 @@ then
     echo "Got unexpected HTTP response ${http_response}. This is likely an error."
   fi
 else
-	unzip ${BUNDLE}.zip
+	unzip -o ${BUNDLE}.zip > /dev/null
 	[ -e ${BUNDLE}.zip ] && rm ${BUNDLE}.zip
 fi
