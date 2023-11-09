@@ -37,7 +37,7 @@ detectType() {
     echo "trigger"
   elif [[ "${absolutePath}" =~ sharedConfig/ ]] ; then
     echo "config"
-  elif [[ "$(pwd)/${absolutePath}" =~ recipe ]] ; then
+  elif [[ "$(pwd)/${absolutePath}" =~ recipes/ ]] ; then
     echo "recipe"
   else
     echo "unknown"
