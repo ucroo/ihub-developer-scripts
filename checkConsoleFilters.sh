@@ -35,11 +35,6 @@ compareValue() {
 [ "$#" = "1" ]            || die "usage: $(basename "$0") ENVIRONMENT"
 command -v jq > /dev/null || die "error: jq must be installed"
 
-# Create temp file to store flow JSON data in and ensure that it will be cleaned
-# up when the script exits
-flowFile=$(mktemp)
-trap "rm -f $flowFile" 0 2 3 15
-
 function downloadJsonFile {
     output=$(curl "${HOST}/repository/flows"        \
                   -w "\nStatus: %{http_code}"       \
@@ -59,25 +54,34 @@ function downloadJsonFile {
 }
 
 
-# Set up the FLOW token
-CURL_ARGS="${CURL_ARGS:-}"
-case $# in
-    0)
-        environment="local"
-        ;;
-    1)
-        environment="$1"
-        ;;
-    *)
-        echo "usage: $(basename "$0") [ENV]"
-        exit 1
-        ;;
-esac
-source setEnvForUpload.sh $environment
-
-
 main() {
-    downloadJsonFile
+    if [ -f "$1" ] ; then
+        flowFile="$1"
+    else
+        # Create temp file to store flow JSON data in and ensure
+        # that it will be cleaned up when the script exits
+        flowFile=$(mktemp)
+        #trap "rm -f $flowFile" 0 2 3 15
+        echo $flowFile
+
+        # Set up the FLOW token
+        CURL_ARGS="${CURL_ARGS:-}"
+        case $# in
+            0)
+                environment="local"
+                ;;
+            1)
+                environment="$1"
+                ;;
+            *)
+                echo "usage: $(basename "$0") [ENV]"
+                exit 1
+                ;;
+        esac
+        source setEnvForUpload.sh $environment
+
+        downloadJsonFile
+    fi
 
     # Print out console filters that match the following
     # undesirable conditions.
@@ -98,4 +102,4 @@ main() {
     valueEqualTo logEnd true
 }
 
-main
+main $*
