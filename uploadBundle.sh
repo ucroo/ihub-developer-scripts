@@ -79,4 +79,4 @@ else
 fi
 
 [ -e uploadBundleResponse.txt ] && rm uploadBundleResponse.txt
-#rm ${SAFE_BUNDLE}.zip
+rm ${SAFE_BUNDLE}.zip
