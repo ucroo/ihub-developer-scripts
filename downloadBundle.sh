@@ -18,7 +18,6 @@ esac
 source setEnvForUpload.sh $ENVIRONMENT
 
 rm ${BUNDLE}.zip
-zip -r ${BUNDLE}.zip $BUNDLE
 
 if [ -z $FLOW_TOKEN ] ;
 then
