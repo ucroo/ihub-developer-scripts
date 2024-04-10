@@ -22,7 +22,7 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	http_response=$(curl $CURL_ARGS -s -o uploadRecipeAnswersResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/recipes/$RECIPE/execute" --data-binary "@$ANSWER")
+	http_response=$(curl $CURL_ARGS -s -o uploadRecipeAnswersResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/recipes/$RECIPE/execute?forceInstallAll=true" --data-binary "@$ANSWER")
 fi
 
 if [ $http_response != "200" ];
