@@ -16,16 +16,27 @@ RECIPE_FAMILY=$(basename "`pwd`")
 RECIPE=$(jq -r ".id" metadata.json)
 echo "Refreshing ${RECIPE_FAMILY} - ${RECIPE}"
 pushd ..
-  uploadRecipe.sh "$RECIPE_FAMILY" "$ENV"
+ uploadRecipe.sh "$RECIPE_FAMILY" "$ENV"
 popd
 source setEnvForUpload.sh "$ENV"
-echo "Rerunning previous answers.  If they're incomplete, this will error and you need to go answer them in the interface and rerun this."
-PREVIOUS_RUN=$(curl $CURL_ARGS -s -H "flow-token: $FLOW_TOKEN" "$HOST/repository/auditLogs?type=recipeExecution&limit=1" )
-ID=$(jq -r ".[0] | .audited.id" <<< "$PREVIOUS_RUN")
+NOW=$(date +%s000)
+DAY=$(expr 1000 \* 60 \* 60 \* 24)
+YESTERDAY=$(expr $NOW - $DAY)
+RECENT_RECIPE_EXECUTIONS=$(curl $CURL_ARGS -s -H "flow-token: $FLOW_TOKEN" "$HOST/repository/auditLogs?type=recipeExecution&start=$YESTERDAY&end=$NOW" )
+INDEX=0
+LENGTH=$(jq -r ". | length" <<< "$RECENT_RECIPE_EXECUTIONS")
+for i in $(jq -r ".[] | .audited.id" <<< "$RECENT_RECIPE_EXECUTIONS"); do
+ INDEX=$(expr $INDEX + 1)
+ if [ "$i" = "$RECIPE" ]; then
+    echo "Recent execution of " $i "found at index" $INDEX
+    break
+ fi
+done
 
-if [ "$ID" = "$RECIPE" ]; then
-  PREVIOUS_ANSWERS=$(jq -r ".[0] | .audited.input" <<< "$PREVIOUS_RUN")
-  curl $CURL_ARGS -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/recipes/$RECIPE/execute?forceInstallAll=true" --data-binary "$PREVIOUS_ANSWERS"
+if [ $INDEX -ge $LENGTH ]; then
+  echo "No recipe executions found on this server for" $RECIPE "in last 24 hours. Rerun through Recipe History."
 else
-  echo "Last recipe execution: " $ID "Attempted recipe execution: " $RECIPE "rerun through Recipe History" 
+  echo "Rerunning previous answers.  If they're incomplete, this will error and you need to go answer them in the interface and rerun this."
+  PREVIOUS_ANSWERS=$(jq -r ".[$INDEX] | .audited.input" <<< "$RECENT_RECIPE_EXECUTIONS")
+  curl $CURL_ARGS -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/recipes/$RECIPE/execute?forceInstallAll=true" --data-binary "$PREVIOUS_ANSWERS"
 fi
