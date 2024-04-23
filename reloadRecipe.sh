@@ -39,7 +39,7 @@ RECENT_RECIPE_EXECUTIONS=$(curl $CURL_ARGS -s -H "flow-token: $FLOW_TOKEN" "$HOS
 HOURS=$(expr 24 \* $RECENT)
 
 if ! [ $RECIPEUSER = 'none' ]; then
-  PREVIOUS_ANSWERS=$(jq -r '[.[] | select(.audited.id=="'$RECIPE'" and .userName=="'$RECIPEUSER'" )][0] | .audited.input' <<< "$RECENT_RECIPE_EXECUTIONS")
+  PREVIOUS_ANSWERS=$(jq -r '[.[] | select(.audited.id=="'$RECIPE'" and .userName=="'"$RECIPEUSER"'" )][0] | .audited.input' <<< "$RECENT_RECIPE_EXECUTIONS")
 else
   PREVIOUS_ANSWERS=$(jq -r '[.[] | select(.audited.id=="'$RECIPE'")][0] | .audited.input' <<< "$RECENT_RECIPE_EXECUTIONS")
 fi
