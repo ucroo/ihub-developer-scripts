@@ -2,65 +2,28 @@
 echo "Run this script from the same directory as your recipe metadata.json"
 echo "Provide an environment shortname which is at least Flow V5.11."
 echo "The first parameter must either be the environment shortname or an integer greater than 0 (the number of days to regard as 'recent' when fetching recent recipeExecutions, defaults to 1 day if not supplied)"
-# Takes in up to three parameters: environment ENV, number of days to fetch recipeExecutions for RECENT, a username to use to filter recipeExecutions RECIPEUSER
-# Accepted combinations:
-#  ENV RECENT RECIPEUSER
-#  ENV RECENT
-#  RECENT RECIPEUSER
-#  RECENT
-#  ENV
-# Where the first parameter supplied is an integer, ENV defaults to 'local'
-# Where no RECENT parameter is supplied, RECENT defaults to 1 day
+# Takes in up to three parameters: 
+#   - environment ENV, defaults to 'local'
+#   - number of days to fetch recipeExecutions for RECENT, defaults to 1
+#   - a username to use to filter recipeExecutions RECIPEUSER
+# Use the following flags to include each parameter:
+#  ENV: -e
+#  RECENT: -d
+#  RECIPEUSER: -u
+ENV='local'
 RECIPEUSER='none'
-RECENT=0
-case $# in
-  3)
-    ENV=$1
-    if ! [[ $2 =~ ^[0-9]+$ && $2 -gt 0 ]]; then
-      echo "Second parameter must be an integer greater than 0"
-      exit
-    else 
-      RECENT=$2
-    fi
-    RECIPEUSER=$3
-    ;;
-  2)
-    if [[ $1 =~ ^[0-9]+$ ]]; then
-      echo "Integer input as first parameter, defaulting to local environment"
-      RECENT=$1
-      RECIPEUSER=$2
-      ENV="local"
-    else
-      ENV="$1"
-      if ! [[ $2 =~ ^[0-9]+$ && $2 -gt 0 ]]; then
-        echo "Days parameter, if provided, must be an integer greater than 0"
-        exit
-      else
-        RECENT=$2
-      fi
-    fi
-    ;;
-  1)
-    if [[ $1 =~ ^[0-9]+$ && $1 -gt 0 ]]; then
-      echo "Integer input as first parameter, defaulting to local environment"
-      RECENT=$1
-      ENV="local"
-    else
-      ENV="$1"
-    fi
-    ;;
-  0)
-    ENV="local"
-    ;;
-  *)
-    return 1
-    ;;
-esac
 
-if ! [[ $RECENT -gt 0 ]]; then
-  echo "No input specified for RECENT, defaulting to 1 day"
-  RECENT=1
-fi
+while getopts d:u:e: flag
+do
+  case "${flag}" in
+    d) RECENT=${OPTARG};;
+    u) RECIPEUSER=${OPTARG};;
+    e) ENV=${OPTARG};;
+  esac
+done
+
+if [ -z "$RECENT" ]; then RECENT=1; fi
+if ! [[ $RECENT =~ ^[0-9]+$ && $RECENT -gt 0 ]]; then echo "Days parameter, if provided, must be an integer greater than 0"; exit; fi
 
 RECIPE_FAMILY=$(basename "`pwd`")
 RECIPE=$(jq -r ".id" metadata.json)
