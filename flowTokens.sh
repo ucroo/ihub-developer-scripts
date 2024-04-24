@@ -18,6 +18,7 @@ function usage() {
     >&2 echo "  deactivate TOKEN  - deactivates the specified token (d)"
     >&2 echo "  update TOKEN      - updates the specified token (u)"
     >&2 echo "  create TOKEN      - creates a token with the the specified name (c)"
+    >&2 echo "  validate          - checks the validity of the token"
     exit 1
 }
 
@@ -101,6 +102,10 @@ case $command in
          [ "$#" -eq "1" ] || usage
          (cd $creds_dir ; ls -1 _*.token | sed -r "s/_(.*)\.token/\1/" )
           ;;
+
+     validate)
+       echo not checking...
+       ;;
 
      *)
          >&2 echo "unknown command: $command"
