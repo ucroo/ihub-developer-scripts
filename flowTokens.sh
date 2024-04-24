@@ -9,7 +9,7 @@
 # the token should be copied from that customer's flow server.
 
 function usage() {
-	>&2 echo "usage: $(basename $0) COMMAND [TOKEN]"
+	>&2 echo "usage: $(basename "$0") COMMAND [TOKEN]"
 	>&2 echo "Commands (and aliases):"
 	>&2 echo "  list              - lists all tokens (ls)"
 	>&2 echo "  list-active       - lists active tokens (la)"
@@ -18,7 +18,7 @@ function usage() {
 	>&2 echo "  deactivate TOKEN  - deactivates the specified token (d)"
 	>&2 echo "  update TOKEN      - updates the specified token (u)"
 	>&2 echo "  create TOKEN      - creates a token with the the specified name (c)"
-	>&2 echo "  validate          - checks the validity of the token"
+	>&2 echo "  validate TOKEN    - checks the validity of the token"
 	exit 1
 }
 
@@ -113,7 +113,35 @@ list-inactive | li)
 	;;
 
 validate)
-	echo not checking...
+	[ "$#" -eq "2" ] || usage
+	token=$2
+	tokenFile="$creds_dir/${token}.token"
+	flowHostFile="$creds_dir/${token}.flow"
+	if [ ! -r "${tokenFile}" ]; then
+		>&2 echo "token ${token} does not exist at ${tokenFile}."
+		exit 1
+	fi
+	flowToken="$(cat "${tokenFile}")"
+	flowHost=
+	if [ -r "${flowHostFile}" ]; then
+		flowHost="$(cat "${flowHostFile}")"
+	else
+		flowHost="https://flow.${token}.pathify.com"
+	fi
+
+	echo -n "validating token with ${flowHost} ... "
+
+	if ! curl -s --fail -X GET "${flowHost}/healthz" >/dev/null; then
+		>&2 echo "server did not respond to health check"
+		exit 1
+	fi
+
+	if ! curl -s --fail -X GET -H "flow-token: ${flowToken}" \
+		"${flowHost}/about" >/dev/null; then
+		echo "token is NOT valid"
+		exit 1
+	fi
+  echo "OK"
 	;;
 
 *)
