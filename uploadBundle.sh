@@ -2,6 +2,15 @@
 BUNDLE="$1"
 ENVIRONMENT="$2"
 
+die() {
+    echo "$*"
+    exit 1
+}
+
+require() {
+    command -v "$1" > /dev/null || die "$1 is not in the \$PATH"
+}
+
 require jq
 
 case $# in
