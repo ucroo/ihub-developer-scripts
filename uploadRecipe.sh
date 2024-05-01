@@ -17,7 +17,7 @@ esac
 
 source setEnvForUpload.sh $ENVIRONMENT
 
-rm ${FLOW}.zip
+[ -e "${FLOW}.zip" ] && rm ${FLOW}.zip
 zip -r ${FLOW}.zip $FLOW
 
 if [ -z $FLOW_TOKEN ] ;
