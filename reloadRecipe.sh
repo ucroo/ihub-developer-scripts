@@ -1,63 +1,109 @@
-#!/bin/sh
-echo "To provide an environment, use -e followed by an environment shortname. The default environment is local.\nTarget environments must be at least Flow V5.11."
-# Takes in up to three parameters: 
-#   - environment ENV, defaults to 'local'
-#   - number of days to fetch recipeExecutions for RECENT, defaults to 1
-#   - a username to use to filter recipeExecutions RECIPEUSER
-# Use the following flags to include each parameter:
-#  ENV: -e
-#  RECENT: -d
-#  RECIPEUSER: -u
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Print error message to stderr and exit
+fatal() {
+	>&2 echo "error: $*"
+	exit 1
+}
+
+# Print usage information to stderr and exit
+usage() {
+	[ "$#" = "0" ] || >&2 echo "error: $*"
+	>&2 cat <<-EOF
+		usage: $(basename "$0") [-e ENV] [-d DAYS] [-u RECIPE_USER]
+
+		  -e ENV           environment (e.g. avc, qa-rollins) defaults to 'local'
+		  -d DAYS          number of days to fetch recipeExecutions for RECENT, defaults to 1
+		  -u RECIPE_USER   a username to use to filter recipeExecutions RECIPEUSER
+
+		To provide an environment, use -e followed by an environment shortname. The default environment is local.
+
+		Note: Target environments must be at least Flow V5.11."
+	EOF
+	exit 1
+}
+
 ENV='local'
 RECIPEUSER='none'
 
-while getopts d:u:e: flag
-do
-  case "${flag}" in
-    d) RECENT=${OPTARG};;
-    u) RECIPEUSER=${OPTARG};;
-    e) ENV=${OPTARG};;
-  esac
+while getopts d:u:e: flag; do
+	case "${flag}" in
+	d)
+		RECENT=${OPTARG}
+		;;
+	u)
+		RECIPEUSER=${OPTARG}
+		;;
+	e)
+		ENV=${OPTARG}
+		;;
+	*)
+		usage
+		;;
+	esac
 done
 
-if [ -z "$RECENT" ]; then RECENT=1; fi
-if ! [[ $RECENT =~ ^[0-9]+$ && $RECENT -gt 0 ]]; then echo "Days parameter, if provided, must be an integer greater than 0"; exit; fi
+shift $((OPTIND - 1))
 
-RECIPE_FAMILY=$(basename "`pwd`")
-if [ ! -r "./metadata.json" ] ; then
-   echo "\nError: no metadata.json found.\nRun this script from the same directory as your recipe metadata.json"
-   exit 1
-fi
+[ "$#" = "0" ] || usage "unrecognized arguments: $*"
+
+RECENT="${RECENT:-1}"
+(("$RECENT" > 0)) || fatal "-d argument (i.e. $RECENT) must be a number that is greater than 0."
+
+RECIPE_FAMILY=$(basename "$(pwd)")
+
+[ -r "./metadata.json" ] || fatal "No metadata.json found. Run this script from the same directory as your recipe metadata.json"
+
 RECIPE=$(jq -r ".id" metadata.json)
-echo "Refreshing ${RECIPE_FAMILY} - ${RECIPE}"
+echo "Reloading ${RECIPE_FAMILY} - ${RECIPE} on ${ENV}..."
+source setEnvForUpload.sh "$ENV" || fatal "cannot setup environment variables."
 
-source setEnvForUpload.sh "$ENV" || exit $?
-pushd .. > /dev/null
- uploadRecipe.sh "$RECIPE_FAMILY" "$ENV"
-popd > /dev/null
+pushd .. >/dev/null
+uploadRecipe.sh "$RECIPE_FAMILY" "$ENV" || true
+popd >/dev/null || exit 1
+echo
 
 NOW=$(date +%s000)
-DAY=$(expr 1000 \* 60 \* 60 \* 24 \* $RECENT)
-YESTERDAY=$(expr $NOW - $DAY)
-RECENT_RECIPE_EXECUTIONS=$(curl $CURL_ARGS -s -H "flow-token: $FLOW_TOKEN" "$HOST/repository/auditLogs?type=recipeExecution&start=$YESTERDAY&end=$NOW" )
-HOURS=$(expr 24 \* $RECENT)
+DAY=$((1000 * 60 * 60 * 24 * RECENT))
+YESTERDAY=$((NOW - DAY))
 
-if [ -z "$RECENT_RECIPE_EXECUTIONS" ]; then echo "No recent recipe executions found on this server";exit; fi
+RECENT_RECIPE_EXECUTIONS=$(
+	# shellcheck disable=SC2086
+	curl $CURL_ARGS -s \
+		-H "flow-token: $FLOW_TOKEN" \
+		"$HOST/repository/auditLogs?type=recipeExecution&start=$YESTERDAY&end=$NOW"
+)
+
+[ -n "$RECENT_RECIPE_EXECUTIONS" ] || fatal "No recent recipe executions found on this server. Please run the recipe manually."
 
 if ! [ "$RECIPEUSER" = 'none' ]; then
-  PREVIOUS_ANSWERS=$(jq -r '[.[] | select(.audited.id=="'$RECIPE'" and .userName=="'"$RECIPEUSER"'" )][0] | .audited.input' <<< "$RECENT_RECIPE_EXECUTIONS")
+	PREVIOUS_ANSWERS=$(jq -r '[
+           .[] | 
+           select(.audited.id=="'"$RECIPE"'" and .userName=="'"$RECIPEUSER"'" )][0] | 
+           .audited.input' <<<"$RECENT_RECIPE_EXECUTIONS")
 else
-  PREVIOUS_ANSWERS=$(jq -r '[.[] | select(.audited.id=="'$RECIPE'")][0] | .audited.input' <<< "$RECENT_RECIPE_EXECUTIONS")
+	PREVIOUS_ANSWERS=$(jq -r '[
+           .[] | 
+           select(.audited.id=="'"$RECIPE"'")][0] | 
+           .audited.input' <<<"$RECENT_RECIPE_EXECUTIONS")
 fi
 
+HOURS=$((24 * RECENT))
 
 if [ "$PREVIOUS_ANSWERS" = 'null' ]; then
-  if ! [ "$RECIPEUSER" = 'none' ]; then
-    echo "No recipe executions by user:" $RECIPEUSER "found on server:" $ENV "for" $RECIPE "in last" $HOURS "hours. Rerun through Recipe History."
-  else
-    echo "No recipe executions found on server:" $ENV "for" $RECIPE "in last" $HOURS "hours. Rerun through Recipe History."
-  fi
+	if ! [ "$RECIPEUSER" = 'none' ]; then
+		echo "No recipe executions by user: $RECIPEUSER found on server: $ENV for $RECIPE in last $HOURS hours. Rerun through Recipe History."
+	else
+		echo "No recipe executions found on server: $ENV for $RECIPE in last $HOURS lours. Rerun through Recipe History."
+	fi
 else
-  echo "Rerunning previous answers.  If they're incomplete, this will error and you need to go answer them in the interface and rerun this."
-  curl $CURL_ARGS -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/recipes/$RECIPE/execute?forceInstallAll=true" --data-binary "$PREVIOUS_ANSWERS"
+	echo "Rerunning recipe with previous answers.  If they're incomplete, this will fail and you need to go answer them in the interface and rerun this script."
+	# shellcheck disable=SC2086
+	curl $CURL_ARGS -H "flow-token: $FLOW_TOKEN" \
+		-H "Content-Type: application/json" \
+		"$HOST/repository/recipes/$RECIPE/execute?forceInstallAll=true" \
+		--data-binary "$PREVIOUS_ANSWERS"
+	echo
 fi
