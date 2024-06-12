@@ -35,6 +35,8 @@ then
   else
     echo "Got unexpected HTTP response ${http_response}. This is likely an error."
   fi
+
+  return 1
 else
   cat uploadResourceCollectionResponse.txt
 fi
