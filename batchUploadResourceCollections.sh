@@ -11,14 +11,12 @@ errorReport=""
 for dir in ./*; do
     if [ -d "$dir" ]; then
         resource=$(basename $dir)
-        echo ""
-        echo "Uploading collection $resource"
-        response=$(uploadResourceCollection.sh "$resource" "$community")
-        echo ""
-
-        if [ "$response" -eq 1 ]; then
+        echo -e "\nUploading collection $resource\n"
+  
+        if ! uploadResourceCollection.sh "$resource" "$community" ; then
             errorReport+="$resource failed to upload.\n"
-        fi    
+        fi
+
     fi
 done
 
