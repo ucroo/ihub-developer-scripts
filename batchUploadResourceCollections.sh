@@ -10,9 +10,9 @@ cd ./src/main/flowResources || exit
 errorReport=""
 for dir in ./*; do
     if [ -d "$dir" ]; then
-        resource=$(basename $dir)
         echo -e "\nUploading collection $resource\n"
   
+        resource=$(basename $dir)
         if ! uploadResourceCollection.sh "$resource" "$community" ; then
             errorReport+="$resource failed to upload.\n"
         fi
