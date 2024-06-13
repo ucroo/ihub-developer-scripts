@@ -20,7 +20,7 @@ for dir in ./*; do
     fi
 done
 
-
+cd ../../..
 
 if [ -n "$errorReport" ]; then
     echo -e "Some resources failed to upload:\n$errorReport"
