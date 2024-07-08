@@ -40,18 +40,19 @@ function downloadJsonFile {
     outputDirectory=${2:-$1}
     parameters=${3:-}
     output=$(curl $CURL_ARGS "${HOST}/repository/${entityType}${parameters}" \
-                -w "\nStatus: %{http_code}"                       \
+                -w "\nFLOW_RESPONSE_STATUS: %{http_code}"                       \
                 -H "flow-token: ${FLOW_TOKEN}"                    \
                 -H "Accept: application/json"                     \
                 --no-progress-meter)
 
-    if [[ "${output}" =~ "Status: 200" ]] ; then
+    if [[ "${output}" =~ "FLOW_RESPONSE_STATUS: 200" ]] ; then
         outputFile="./src/main/${outputDirectory}/${environment}.json"
-        if echo "${output}" | grep -v "Status: "| jq empty >& /dev/null ; then
-            echo "${output}" | grep -v "Status: " > "${outputFile}"
+        if echo "${output}" | grep -v "FLOW_RESPONSE_STATUS: "| jq empty >& /dev/null ; then
+            echo "${output}" | grep -v "FLOW_RESPONSE_STATUS: " > "${outputFile}"
             filtered=$(jq 'del(.[].metadata, .[].referencedBy)' "${outputFile}")
             echo "${filtered}" > "${outputFile}"
         else
+            echo "${output}"
             >&2 echo "server did not return valid JSON.  Is your token valid?"
             return 1
         fi
