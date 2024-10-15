@@ -96,7 +96,7 @@ if [ "$PREVIOUS_ANSWERS" = 'null' ]; then
 	if ! [ "$RECIPEUSER" = 'none' ]; then
 		echo "No recipe executions by user: $RECIPEUSER found on server: $ENV for $RECIPE in last $HOURS hours. Rerun through Recipe History."
 	else
-		echo "No recipe executions found on server: $ENV for $RECIPE in last $HOURS lours. Rerun through Recipe History."
+		echo "No recipe executions found on server: $ENV for $RECIPE in last $HOURS hours. Rerun through Recipe History."
 	fi
 else
 	echo "Rerunning recipe with previous answers.  If they're incomplete, this will fail and you need to go answer them in the interface and rerun this script."
