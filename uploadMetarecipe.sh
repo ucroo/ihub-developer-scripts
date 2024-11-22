@@ -49,6 +49,7 @@ else
           echo "Got unexpected HTTP response ${http_response}. This is likely an error."
         fi
         cat ${i}.txt
+        rm ${i}.txt
         ERRORS_FOUND=true
         break
       else
