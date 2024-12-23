@@ -98,6 +98,7 @@ NEW_NAME=$(jq -r '."'"$RECIPE"'"[0].to' ../mappings.json)
 if ! [ "$OLD_NAME" = 'null' ]; then 
 	PREVIOUS_ANSWERS=$(jq '. | .["'"$NEW_NAME"'"] = ."'"$OLD_NAME"'" | del(."'"$OLD_NAME"'")' <<<"$PREVIOUS_ANSWERS")
 
+fi
 
 HOURS=$((24 * RECENT))
 
