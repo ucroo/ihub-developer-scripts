@@ -34,6 +34,7 @@ then
     echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
   else
     echo "Got unexpected HTTP response ${http_response}. This is likely an error."
+		cat uploadRecipeResponse.txt
   fi
 else
   cat uploadRecipeResponse.txt
