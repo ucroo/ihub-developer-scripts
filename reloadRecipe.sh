@@ -81,12 +81,12 @@ RECENT_RECIPE_EXECUTIONS=$(
 if ! [ "$RECIPEUSER" = 'none' ]; then
 	PREVIOUS_ANSWERS=$(jq -r '[
            .[] | 
-           select(.audited.id=="'"$RECIPE"'" and .userName=="'"$RECIPEUSER"'" )][0] | 
+					 select(.audited.id | startswith("'"$RECIPE_FAMILY"'") and .userName=="'"$RECIPEUSER"'" )][0] | 
            .audited.input' <<<"$RECENT_RECIPE_EXECUTIONS")
 else
 	PREVIOUS_ANSWERS=$(jq -r '[
            .[] | 
-           select(.audited.id=="'"$RECIPE"'")][0] | 
+						 select(.audited.id | startswith("'"$RECIPE_FAMILY"'"))][0] | 
            .audited.input' <<<"$RECENT_RECIPE_EXECUTIONS")
 fi
 
