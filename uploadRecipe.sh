@@ -1,10 +1,18 @@
+# This script zips and uploads a recipe to a remote repository
+# Optionally, for meta recipes, it will process child recipes if the --include-child-recipes flag is provided
+
+
 #!/bin/sh
 FLOW="$1"
 ENVIRONMENT="$2"
 
+
 case $# in
-  2)
+  2|3)
     ENVIRONMENT="$2"
+    if [ "$3" = "--include-child-recipes" ]; then
+      INCLUDE_CHILD=true
+    fi
     ;;
   1)
     ENVIRONMENT="local"
@@ -13,14 +21,13 @@ case $# in
     echo "Not enough arguments supplied. You must supply the recipe directory."
     exit 1
     ;;
-esac    
+esac
 
 source setEnvForUpload.sh "$ENVIRONMENT"
 
 declare -A PROCESSED_RECIPES
 
 zip_and_upload() {
-  echo $PROCESSED_RECIPES
   local RECIPE="$1"
 
   # Prevent reprocessing
@@ -48,8 +55,6 @@ zip_and_upload() {
     -H "format: zip" -H "name: ${RECIPE}" "$HOST/repository/recipes" \
     --data-binary "@${RECIPE}.zip")
 
-  echo "${HOST}"
-
   if [ "$http_response" != "200" ]; then
     if [ "$http_response" = "302" ]; then
       echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
@@ -60,15 +65,17 @@ zip_and_upload() {
     cat uploadRecipeResponse.txt
   fi
 
-  [ -e uploadRecipeResponse.txt ]
+  [ -e uploadRecipeResponse.txt ] && rm uploadRecipeResponse.txt
 
-  METADATA_FILE="${RECIPE}/metadata.json"
-  if [ -f "$METADATA_FILE" ]; then
-    local child_recipes=$(jq -r '.bindings | to_entries[] | select(.value.variableType == "recipeExecution") | .value.recipeId' "$METADATA_FILE" | sort -u)
-    
-    for child_recipe in $child_recipes; do
-      zip_and_upload "$child_recipe"
-    done
+  if [ "$INCLUDE_CHILD" = true ]; then
+    METADATA_FILE="${RECIPE}/metadata.json"
+    if [ -f "$METADATA_FILE" ]; then
+      local child_recipes=$(jq -r '.bindings | to_entries[] | select(.value.variableType == "recipeExecution") | .value.recipeId' "$METADATA_FILE" | sort -u)
+      
+      for child_recipe in $child_recipes; do
+        zip_and_upload "$child_recipe"
+      done
+    fi
   fi
 }
 
