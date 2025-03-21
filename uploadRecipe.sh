@@ -34,8 +34,6 @@ esac
 
 source setEnvForUpload.sh "$ENVIRONMENT"
 
-declare -A PROCESSED_RECIPES
-
 zip_and_upload() {
   local RECIPE="$1"
 
