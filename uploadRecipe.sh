@@ -8,14 +8,22 @@ ENVIRONMENT="$2"
 
 
 case $# in
-  2|3)
+  1)
+    ENVIRONMENT="local"
+    ;;
+  2)
+    if [ "$2" = "--include-child-recipes" ]; then
+      ENVIRONMENT="local"
+      INCLUDE_CHILD=true
+    else
+      ENVIRONMENT="$2"
+    fi
+    ;;
+  3)
     ENVIRONMENT="$2"
     if [ "$3" = "--include-child-recipes" ]; then
       INCLUDE_CHILD=true
     fi
-    ;;
-  1)
-    ENVIRONMENT="local"
     ;;
   *)
     echo "Not enough arguments supplied. You must supply the recipe directory."
@@ -23,18 +31,13 @@ case $# in
     ;;
 esac
 
+
 source setEnvForUpload.sh "$ENVIRONMENT"
 
 declare -A PROCESSED_RECIPES
 
 zip_and_upload() {
   local RECIPE="$1"
-
-  # Prevent reprocessing
-  # if [ "${PROCESSED_RECIPES[$RECIPE]}" ]; then
-  #   return
-  # fi
-  # PROCESSED_RECIPES[$RECIPE]=1
 
   if [ ! -d "$RECIPE" ]; then
     echo "Recipe directory $RECIPE does not exist, skipping..."
