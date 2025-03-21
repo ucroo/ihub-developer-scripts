@@ -65,6 +65,7 @@ zip_and_upload() {
       echo "Got unexpected HTTP response ${http_response}. This is likely an error."
     fi
   else
+    echo "Got unexpected HTTP response ${http_response}. This is likely an error."
     cat uploadRecipeResponse.txt
   fi
 

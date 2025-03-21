@@ -10,7 +10,6 @@ fatal() {
 
 # Print usage information to stderr and exit
 usage() {
-	[ "$#" = "0" ] || >&2 echo "error: $*"
 	>&2 cat <<-EOF
 		usage: $(basename "$0") [-e ENV] [-d DAYS] [-u RECIPE_USER]
 
@@ -27,6 +26,8 @@ usage() {
 
 ENV='local'
 RECIPEUSER='none'
+OLD_VERSION="$1"
+
 
 while getopts d:u:e: flag; do
 	case "${flag}" in
@@ -47,8 +48,6 @@ done
 
 shift $((OPTIND - 1))
 
-[ "$#" = "0" ] || usage "unrecognized arguments: $*"
-
 RECENT="${RECENT:-1}"
 (("$RECENT" > 0)) || fatal "-d argument (i.e. $RECENT) must be a number that is greater than 0."
 
@@ -57,7 +56,9 @@ RECIPE_FAMILY=$(basename "$(pwd)")
 [ -r "./metadata.json" ] || fatal "No metadata.json found. Run this script from the same directory as your recipe metadata.json"
 
 RECIPE=$(jq -r ".id" metadata.json)
-echo "Reloading ${RECIPE_FAMILY} - ${RECIPE} on ${ENV}..."
+OLD_RECIPE=$(jq -r ".id" ../$OLD_VERSION/metadata.json)
+
+echo "Updating from ${OLD_RECIPE} to ${RECIPE} on ${ENV}..."
 source setEnvForUpload.sh "$ENV" || fatal "cannot setup environment variables."
 
 pushd .. >/dev/null
@@ -78,16 +79,25 @@ RECENT_RECIPE_EXECUTIONS=$(
 
 [ -n "$RECENT_RECIPE_EXECUTIONS" ] || fatal "No recent recipe executions found on this server. Please run the recipe manually."
 
+
 if ! [ "$RECIPEUSER" = 'none' ]; then
 	PREVIOUS_ANSWERS=$(jq -r '[
            .[] | 
-					 select(.audited.id | startswith("'"$RECIPE_FAMILY"'") and .userName=="'"$RECIPEUSER"'" )][0] | 
+           select(.audited.id=="'"$OLD_RECIPE"'" and .userName=="'"$RECIPEUSER"'" )][0] | 
            .audited.input' <<<"$RECENT_RECIPE_EXECUTIONS")
 else
 	PREVIOUS_ANSWERS=$(jq -r '[
            .[] | 
-						 select(.audited.id | startswith("'"$RECIPE_FAMILY"'"))][0] | 
+           select(.audited.id=="'"$OLD_RECIPE"'")][0] | 
            .audited.input' <<<"$RECENT_RECIPE_EXECUTIONS")
+fi
+
+OLD_NAME=$(jq -r '."'"$RECIPE"'"[0].from' ../mappings.json)
+NEW_NAME=$(jq -r '."'"$RECIPE"'"[0].to' ../mappings.json)
+
+if ! [ "$OLD_NAME" = 'null' ]; then 
+	PREVIOUS_ANSWERS=$(jq '. | .["'"$NEW_NAME"'"] = ."'"$OLD_NAME"'" | del(."'"$OLD_NAME"'")' <<<"$PREVIOUS_ANSWERS")
+
 fi
 
 HOURS=$((24 * RECENT))
