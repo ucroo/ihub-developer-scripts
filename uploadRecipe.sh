@@ -33,7 +33,9 @@ if [ -f "${FLOW}/metadata.json" ]; then
       
       # Update the metadata.json file with the new ID
       sed -i "s/\"id\"[[:space:]]*:[[:space:]]*\"$ID_VALUE\"/\"id\": \"$NEW_ID\"/" "${FLOW}/metadata.json"
-      
+      # if this script is editing the ID of your recipe file, uncomment the line above and comment out the line below
+      # sed -i '' "s/\"id\"[[:space:]]*:[[:space:]]*\"$ID_VALUE\"/\"id\": \"$NEW_ID\"/" "${FLOW}/metadata.json"
+      # if you're getting `sed: 1: "...": invalid command code f` use the line above
       echo "Updated ID from '$ID_VALUE' to '$NEW_ID' in metadata.json"
     fi
   fi
