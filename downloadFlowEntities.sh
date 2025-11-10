@@ -64,18 +64,20 @@ function downloadJsonFile {
 function downloadZipFile {
     entityType=$1
     outputDirectory=${2:-$1}
-    outputFile="./src/main/${outputDirectory}/${environment}.zip"
-    if curl $CURL_ARGS "${HOST}/repository/${entityType}?format=zip" \
+    parameters=${3:-}
+    outputFile="./src/main/${outputDirectory}/${environment}.zip" 
+    if curl $CURL_ARGS "${HOST}/repository/${entityType}${parameters}" \
                   -H "flow-token: ${FLOW_TOKEN}"          \
                   -H "Accept: application/zip"            \
                   --no-progress-meter                     \
                   > "${outputFile}" ; then
         if [ -r "${outputFile}" ] ; then
+            ls -lha $outputFile
             unzip -o "${outputFile}" -d "./src/main/${outputDirectory}/" > /dev/null || true
             rm "${outputFile}"
             # Use jq to format the JSON files that were in the zip file.
             while IFS= read -r -d '' jsonFile ; do
-                filtered=$(jq 'del(.metadata)' "${jsonFile}")
+                filtered=$(jq 'if type == "array" then map(del(.metadata)) else del(.metadata) end' "${jsonFile}")
                 echo "${filtered}" > "${jsonFile}"
                 cat <<< "$(jq < "${jsonFile}")" > "${jsonFile}"
             done < <(find "./src/main/${outputDirectory}" -iname '*.json' -print0)
@@ -85,11 +87,11 @@ function downloadZipFile {
 
 #                Flow Route            Directory        Query String Parameters
 #                -------------------   ------------     ---------------------------
-downloadJsonFile flows                 flows
+downloadZipFile  flows                 flows            '?format=flow-zip'
 downloadJsonFile sharedConfig          sharedConfig     '?encrypted_only=true'
 downloadJsonFile flowTriggerers        triggerers
 downloadJsonFile patchSets             patchSets
-downloadZipFile  resourceCollections   flowResources
+downloadZipFile  resourceCollections   flowResources     '?format=zip'
 
 # Format the JavaScript in the flow JSON file.
 python3 "$(dirname "$0")/python/format_json.py" "./src/main/flows/${environment}.json"
