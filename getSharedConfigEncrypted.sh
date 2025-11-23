@@ -16,7 +16,7 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	curl $CURL_ARGS -X GET -H "flow-token: $FLOW_TOKEN" "$HOST/repository/sharedConfig?encrypted=true" 
+	curl $CURL_ARGS -X GET -H "flow-token: $FLOW_TOKEN" "$HOST/ihub-viewer/repository/sharedConfig?encrypted=true" 
 fi
 
 

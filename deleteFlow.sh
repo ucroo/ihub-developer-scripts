@@ -21,5 +21,5 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	curl $CURL_ARGS -X DELETE -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/flows/$FLOW" 
+	curl $CURL_ARGS -X DELETE -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/ihub-viewer/repository/flows/$FLOW" 
 fi

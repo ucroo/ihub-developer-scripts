@@ -73,7 +73,7 @@ RECENT_RECIPE_EXECUTIONS=$(
 	# shellcheck disable=SC2086
 	curl $CURL_ARGS -s \
 		-H "flow-token: $FLOW_TOKEN" \
-		"$HOST/repository/auditLogs?type=recipeExecution&start=$YESTERDAY&end=$NOW"
+		"$HOST/ihub-viewer/repository/auditLogs?type=recipeExecution&start=$YESTERDAY&end=$NOW"
 )
 
 [ -n "$RECENT_RECIPE_EXECUTIONS" ] || fatal "No recent recipe executions found on this server. Please run the recipe manually."
@@ -103,7 +103,7 @@ else
 	# shellcheck disable=SC2086
 	curl $CURL_ARGS -H "flow-token: $FLOW_TOKEN" \
 		-H "Content-Type: application/json" \
-		"$HOST/repository/recipes/$RECIPE/execute?forceInstallAll=true" \
+		"$HOST/ihub-viewer/repository/recipes/$RECIPE/execute?forceInstallAll=true" \
 		--data-binary "$PREVIOUS_ANSWERS"
 	echo
 fi

@@ -27,7 +27,7 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	exit 1
 else
-	http_response=$(curl $CURL_ARGS -s -o uploadSharedConfigFragmentResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" -H "referenceId: $FRAGMENT_NAME" -H "secure: $SECURE" "$HOST/repository/sharedConfig" --data-binary "@src/main/sharedConfig/$FRAGMENT_FILE")
+	http_response=$(curl $CURL_ARGS -s -o uploadSharedConfigFragmentResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" -H "referenceId: $FRAGMENT_NAME" -H "secure: $SECURE" "$HOST/ihub-viewer/repository/sharedConfig" --data-binary "@src/main/sharedConfig/$FRAGMENT_FILE")
 fi
 
 if [ $http_response != "200" ];

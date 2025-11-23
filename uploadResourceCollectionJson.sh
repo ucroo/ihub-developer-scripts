@@ -21,7 +21,7 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	http_response=$(curl $CURL_ARGS -s -o uploadResourceCollectionJsonResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/resourceCollections" --data-binary "@${FLOW}.json")
+	http_response=$(curl $CURL_ARGS -s -o uploadResourceCollectionJsonResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/ihub-viewer/repository/resourceCollections" --data-binary "@${FLOW}.json")
 fi
 
 if [ $http_response != "200" ];

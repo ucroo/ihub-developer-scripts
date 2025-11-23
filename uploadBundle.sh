@@ -71,7 +71,7 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	exit 1
 else
-	http_response=$(curl $CURL_ARGS -s -o uploadBundleResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" "$HOST/repository/bundles?format=flow-zip&id=$BUNDLE" --data-binary "@${SAFE_BUNDLE}.zip")
+	http_response=$(curl $CURL_ARGS -s -o uploadBundleResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" "$HOST/ihub-viewer/repository/bundles?format=flow-zip&id=$BUNDLE" --data-binary "@${SAFE_BUNDLE}.zip")
 fi
 
 if [ $http_response != "200" ];

@@ -21,7 +21,7 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	exit 1
 else
-	http_response=$(curl $CURL_ARGS -s -o uploadFlowResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/patchSets" --data-binary "@src/main/patchSets/$TARGET.json")
+	http_response=$(curl $CURL_ARGS -s -o uploadFlowResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/ihub-viewer/repository/patchSets" --data-binary "@src/main/patchSets/$TARGET.json")
 fi
 
 if [ $http_response != "200" ];
