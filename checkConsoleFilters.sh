@@ -1,5 +1,5 @@
 #! /bin/bash
-# checkConsoleFilters -- examines a file downloaded from <BASE_URL>/repository/flows
+# checkConsoleFilters -- examines a file downloaded from <BASE_URL>/ihub-viewer/repository/flows
 # to see if its consoleFilters are configured correctly.
 #
 # Note: this script is inefficient due to its repeated parsing of the JSON file but

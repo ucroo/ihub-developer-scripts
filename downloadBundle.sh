@@ -23,7 +23,7 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	http_response=$(curl $CURL_ARGS -s -o ${BUNDLE}.zip -w "%{http_code}" -X GET -H "flow-token: $FLOW_TOKEN" "$HOST/repository/bundles?format=flow-zip&id=$BUNDLE")
+	http_response=$(curl $CURL_ARGS -s -o ${BUNDLE}.zip -w "%{http_code}" -X GET -H "flow-token: $FLOW_TOKEN" "$HOST/ihub-viewer/repository/bundles?format=flow-zip&id=$BUNDLE")
 fi
 
 if [ $http_response != "200" ];

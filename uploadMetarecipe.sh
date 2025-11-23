@@ -37,7 +37,7 @@ else
       #based on uploadRecipe.sh
       [ -e "${i}.zip" ] && rm ${i}.zip
       zip -r ${i}.zip $i
-      http_response=$(curl $CURL_ARGS -s -o ${i}.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${i}" "$HOST/repository/recipes" --data-binary "@${i}.zip")
+      http_response=$(curl $CURL_ARGS -s -o ${i}.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${i}" "$HOST/ihub-viewer/repository/recipes" --data-binary "@${i}.zip")
       if [ $http_response != "200" ];
       then
         echo "$RESPONSES"

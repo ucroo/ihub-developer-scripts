@@ -21,7 +21,7 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	http_response=$(curl $CURL_ARGS -s -o uploadConfigPanelResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/repository/configPanels" --data-binary "@src/main/configPanels/$SOURCE_FILE.json")
+	http_response=$(curl $CURL_ARGS -s -o uploadConfigPanelResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/ihub-viewer/repository/configPanels" --data-binary "@src/main/configPanels/$SOURCE_FILE.json")
 fi
 
 if [ $http_response != "200" ];

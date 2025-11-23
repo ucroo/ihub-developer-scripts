@@ -39,7 +39,7 @@ function downloadJsonFile {
     entityType=$1
     outputDirectory=${2:-$1}
     parameters=${3:-}
-    output=$(curl $CURL_ARGS "${HOST}/repository/${entityType}${parameters}" \
+    output=$(curl $CURL_ARGS "${HOST}/ihub-viewer/repository/${entityType}${parameters}" \
                 -w "\nFLOW_RESPONSE_STATUS: %{http_code}"                       \
                 -H "flow-token: ${FLOW_TOKEN}"                    \
                 -H "Accept: application/json"                     \
@@ -65,7 +65,7 @@ function downloadZipFile {
     entityType=$1
     outputDirectory=${2:-$1}
     outputFile="./src/main/${outputDirectory}/${environment}.zip"
-    if curl $CURL_ARGS "${HOST}/repository/${entityType}?format=zip" \
+    if curl $CURL_ARGS "${HOST}/ihub-viewer/repository/${entityType}?format=zip" \
                   -H "flow-token: ${FLOW_TOKEN}"          \
                   -H "Accept: application/zip"            \
                   --no-progress-meter                     \
