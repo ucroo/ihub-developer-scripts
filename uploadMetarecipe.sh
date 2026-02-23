@@ -16,7 +16,7 @@ case $# in
     ;;
 esac    
 
-CHILD_RECIPES=$(jq -r '.bindings | .. | select(type == "object" and has("recipeId") and .variableType == "recipeExecution") | .recipeId' $METARECIPE/metadata.json)
+CHILD_RECIPES=$(jq -r '.bindings | .. | select(type == "object" and has("recipeId") and .variableType == "recipeExecution") | .recipeId | sub("(_[0-9]+){3}$"; "")' $METARECIPE/metadata.json)
 
 if [ -z "$CHILD_RECIPES" ];
 then
