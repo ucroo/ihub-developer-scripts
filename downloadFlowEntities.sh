@@ -17,18 +17,25 @@ require jq
 
 CURL_ARGS="${CURL_ARGS:-}"
 
-case $# in
-    0)
-        environment="local"
-        ;;
-    1)
-        environment="$1"
-        ;;
-    *)
-        echo "usage: $(basename "$0") [ENV]"
-        exit 1
-        ;;
-esac
+environment="local"
+reformat=true
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --no-reformat|-n)
+            reformat=false
+            shift
+            ;;
+        -*)
+            echo "usage: $(basename "$0") [ENV] [--no-reformat|-n]"
+            exit 1
+            ;;
+        *)
+            environment="$1"
+            shift
+            ;;
+    esac
+done
 
 source setEnvForUpload.sh $environment
 
@@ -49,8 +56,10 @@ function downloadJsonFile {
         outputFile="./src/main/${outputDirectory}/${environment}.json"
         if echo "${output}" | grep -v "FLOW_RESPONSE_STATUS: "| jq empty >& /dev/null ; then
             echo "${output}" | grep -v "FLOW_RESPONSE_STATUS: " > "${outputFile}"
-            filtered=$(jq 'del(.[].metadata, .[].referencedBy)' "${outputFile}")
-            echo "${filtered}" > "${outputFile}"
+            if [[ "${reformat}" == true ]]; then
+                filtered=$(jq 'del(.[].metadata, .[].referencedBy)' "${outputFile}")
+                echo "${filtered}" > "${outputFile}"
+            fi
         else
             echo "${output}"
             >&2 echo "server did not return valid JSON.  Is your token valid?"
@@ -73,12 +82,14 @@ function downloadZipFile {
         if [ -r "${outputFile}" ] ; then
             unzip -o "${outputFile}" -d "./src/main/${outputDirectory}/" > /dev/null || true
             rm "${outputFile}"
-            # Use jq to format the JSON files that were in the zip file.
-            while IFS= read -r -d '' jsonFile ; do
-                filtered=$(jq 'del(.metadata)' "${jsonFile}")
-                echo "${filtered}" > "${jsonFile}"
-                cat <<< "$(jq < "${jsonFile}")" > "${jsonFile}"
-            done < <(find "./src/main/${outputDirectory}" -iname '*.json' -print0)
+            if [[ "${reformat}" == true ]]; then
+                # Use jq to format the JSON files that were in the zip file.
+                while IFS= read -r -d '' jsonFile ; do
+                    filtered=$(jq 'del(.metadata)' "${jsonFile}")
+                    echo "${filtered}" > "${jsonFile}"
+                    cat <<< "$(jq < "${jsonFile}")" > "${jsonFile}"
+                done < <(find "./src/main/${outputDirectory}" -iname '*.json' -print0)
+            fi
         fi
    fi
 }
@@ -91,5 +102,7 @@ downloadJsonFile flowTriggerers        triggerers
 downloadJsonFile patchSets             patchSets
 downloadZipFile  resourceCollections   flowResources
 
-# Format the JavaScript in the flow JSON file.
-python3 "$(dirname "$0")/python/format_json.py" "./src/main/flows/${environment}.json"
+if [[ "${reformat}" == true ]]; then
+    # Format the JavaScript in the flow JSON file.
+    python3 "$(dirname "$0")/python/format_json.py" "./src/main/flows/${environment}.json"
+fi
