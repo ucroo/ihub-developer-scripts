@@ -39,6 +39,31 @@ if [ -f "${FLOW}/metadata.json" ]; then
   fi
 fi
 
+# Set (or insert) a top-level string-valued key in a JSON file (GNU sed)
+set_metadata_key() {
+  KEY="$1"
+  VALUE="$2"
+  FILE="$3"
+  if grep -q "\"$KEY\"[[:space:]]*:" "$FILE"; then
+    sed -i "s/\"$KEY\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"$KEY\": \"$VALUE\"/" "$FILE"
+  else
+    # Key not present: insert it right after the opening brace
+    sed -i "0,/{/s//{\n  \"$KEY\": \"$VALUE\",/" "$FILE"
+  fi
+}
+
+# When uploading to a recipe development server, widen the version
+# compatibility range so the recipe is always selectable there.
+case "$ENVIRONMENT" in
+  amanda|testing-manual)
+    if [ -f "${FLOW}/metadata.json" ]; then
+      set_metadata_key "minVersion" "1.0.0" "${FLOW}/metadata.json"
+      set_metadata_key "maxVersion" "100.0.0" "${FLOW}/metadata.json"
+      echo "Set minVersion to 1.0.0 and maxVersion to 100.0.0 in metadata.json because you are uploading to a recipe development server (${ENVIRONMENT})."
+    fi
+    ;;
+esac
+
 source setEnvForUpload.sh $ENVIRONMENT
 [ -e "${FLOW}.zip" ] && rm ${FLOW}.zip
 zip -r ${FLOW}.zip $FLOW
