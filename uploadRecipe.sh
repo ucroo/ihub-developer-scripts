@@ -16,32 +16,42 @@ esac
 
 # Check if metadata.json exists in the directory
 if [ -f "${FLOW}/metadata.json" ]; then
+  # Backup metadata.json
+  cp "${FLOW}/metadata.json" "${FLOW}/metadata.json.bak"
+
   # Extract the id value from metadata.json
   ID_VALUE=$(grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' "${FLOW}/metadata.json" | cut -d'"' -f4)
-  
+
   # Check if the ID ends with a semantic version pattern (digits separated by underscores)
   if ! echo "$ID_VALUE" | grep -q '_[0-9]\+_[0-9]\+_[0-9]\+$'; then
     # ID doesn't end with version, so look for the version key
     VERSION_VALUE=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "${FLOW}/metadata.json" | cut -d'"' -f4)
-    
+
     if [ -n "$VERSION_VALUE" ]; then
       # Replace dots with underscores in the version
       VERSION_FORMATTED=$(echo "$VERSION_VALUE" | tr '.' '_')
-      
+
       # Create the new ID by appending the formatted version
       NEW_ID="${ID_VALUE}_${VERSION_FORMATTED}"
-      
+
       # Update the metadata.json file with the new ID
-      sed -i "s/\"id\"[[:space:]]*:[[:space:]]*\"$ID_VALUE\"/\"id\": \"$NEW_ID\"/" "${FLOW}/metadata.json"
-      
+      sed -i '' "s/\"id\"[[:space:]]*:[[:space:]]*\"$ID_VALUE\"/\"id\": \"$NEW_ID\"/" "${FLOW}/metadata.json"
+
       echo "Updated ID from '$ID_VALUE' to '$NEW_ID' in metadata.json"
     fi
   fi
+  # Insert min and max version props
+  MIN_VERSION="1.0.0"
+  MAX_VERSION="100.0.0"
+  sed -i '' '1s/{/{"minVersion":"'$MIN_VERSION'","maxVersion":"'$MAX_VERSION'",/' "${FLOW}/metadata.json"
+  echo "Updated minVersion to '$MIN_VERSION' and maxVersion to '$MAX_VERSION' in metadata.json"
 fi
 
 source setEnvForUpload.sh $ENVIRONMENT
 [ -e "${FLOW}.zip" ] && rm ${FLOW}.zip
 zip -r ${FLOW}.zip $FLOW
+# Restore metadata.json from backup
+[ -f "${FLOW}/metadata.json.bak" ] && mv "${FLOW}/metadata.json.bak" "${FLOW}/metadata.json"
 if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
