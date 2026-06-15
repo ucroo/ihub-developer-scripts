@@ -35,7 +35,7 @@ if [ -f "${FLOW}/metadata.json" ]; then
       NEW_ID="${ID_VALUE}_${VERSION_FORMATTED}"
 
       # Update the metadata.json file with the new ID
-      sed -i '' "s/\"id\"[[:space:]]*:[[:space:]]*\"$ID_VALUE\"/\"id\": \"$NEW_ID\"/" "${FLOW}/metadata.json"
+      sed "s/\"id\"[[:space:]]*:[[:space:]]*\"$ID_VALUE\"/\"id\": \"$NEW_ID\"/" "${FLOW}/metadata.json"
 
       echo "Updated ID from '$ID_VALUE' to '$NEW_ID' in metadata.json"
     fi
@@ -43,15 +43,13 @@ if [ -f "${FLOW}/metadata.json" ]; then
   # Insert min and max version props
   MIN_VERSION="1.0.0"
   MAX_VERSION="100.0.0"
-  sed -i '' '1s/{/{"minVersion":"'$MIN_VERSION'","maxVersion":"'$MAX_VERSION'",/' "${FLOW}/metadata.json"
+  sed '1s/{/{"minVersion":"'$MIN_VERSION'","maxVersion":"'$MAX_VERSION'",/' "${FLOW}/metadata.json"
   echo "Updated minVersion to '$MIN_VERSION' and maxVersion to '$MAX_VERSION' in metadata.json"
 fi
 
 source setEnvForUpload.sh $ENVIRONMENT
 [ -e "${FLOW}.zip" ] && rm ${FLOW}.zip
 zip -r ${FLOW}.zip $FLOW
-# Restore metadata.json from backup
-[ -f "${FLOW}/metadata.json.bak" ] && mv "${FLOW}/metadata.json.bak" "${FLOW}/metadata.json"
 if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
@@ -70,5 +68,6 @@ then
 else
   cat uploadRecipeResponse.txt
 fi
+[ -f "${FLOW}/metadata.json.bak" ] && mv "${FLOW}/metadata.json.bak" "${FLOW}/metadata.json"
 [ -e uploadRecipeResponse.txt ] && rm uploadRecipeResponse.txt
 rm ${FLOW}.zip
