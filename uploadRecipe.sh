@@ -35,16 +35,14 @@ if [ -f "${FLOW}/metadata.json" ]; then
       NEW_ID="${ID_VALUE}_${VERSION_FORMATTED}"
 
       # Update the metadata.json file with the new ID
-      sed "s/\"id\"[[:space:]]*:[[:space:]]*\"$ID_VALUE\"/\"id\": \"$NEW_ID\"/" "${FLOW}/metadata.json"
-
+      sed "s/\"id\"[[:space:]]*:[[:space:]]*\"$ID_VALUE\"/\"id\": \"$NEW_ID\"/" "${FLOW}/metadata.json" > "${FLOW}/metadata.json.tmp" && mv "${FLOW}/metadata.json.tmp" "${FLOW}/metadata.json"
       echo "Updated ID from '$ID_VALUE' to '$NEW_ID' in metadata.json"
     fi
   fi
-  # Insert min and max version props
-  MIN_VERSION="1.0.0"
-  MAX_VERSION="100.0.0"
-  sed '1s/{/{"minVersion":"'$MIN_VERSION'","maxVersion":"'$MAX_VERSION'",/' "${FLOW}/metadata.json"
-  echo "Updated minVersion to '$MIN_VERSION' and maxVersion to '$MAX_VERSION' in metadata.json"
+  # insert "minVersion": "1.0.0" and "maxVersion": "100.0.0" if both are not provided
+  if ! grep -q '"minVersion"[[:space:]]*:' "${FLOW}/metadata.json" && ! grep -q '"maxVersion"[[:space:]]*:' "${FLOW}/metadata.json"; then
+    sed '1s/{/{"minVersion":"1.0.0","maxVersion":"100.0.0",/' "${FLOW}/metadata.json" > "${FLOW}/metadata.json.tmp" && mv "${FLOW}/metadata.json.tmp" "${FLOW}/metadata.json"
+  fi
 fi
 
 source setEnvForUpload.sh $ENVIRONMENT
