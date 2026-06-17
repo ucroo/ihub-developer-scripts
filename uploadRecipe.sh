@@ -32,7 +32,7 @@ if [ -f "${FLOW}/metadata.json" ]; then
       NEW_ID="${ID_VALUE}_${VERSION_FORMATTED}"
       
       # Update the metadata.json file with the new ID
-      sed -i "s/\"id\"[[:space:]]*:[[:space:]]*\"$ID_VALUE\"/\"id\": \"$NEW_ID\"/" "${FLOW}/metadata.json"
+      sed -i '' "s/\"id\"[[:space:]]*:[[:space:]]*\"$ID_VALUE\"/\"id\": \"$NEW_ID\"/" "${FLOW}/metadata.json"
       
       echo "Updated ID from '$ID_VALUE' to '$NEW_ID' in metadata.json"
     fi
@@ -45,10 +45,10 @@ set_metadata_key() {
   VALUE="$2"
   FILE="$3"
   if grep -q "\"$KEY\"[[:space:]]*:" "$FILE"; then
-    sed -i "s/\"$KEY\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"$KEY\": \"$VALUE\"/" "$FILE"
+    sed -i '' "s/\"$KEY\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"$KEY\": \"$VALUE\"/" "$FILE"
   else
     # Key not present: insert it right after the opening brace
-    sed -i "0,/{/s//{\n  \"$KEY\": \"$VALUE\",/" "$FILE"
+    sed -i '' "1s/{/{\n  \"$KEY\": \"$VALUE\",/" "$FILE"
   fi
 }
 
