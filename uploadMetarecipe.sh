@@ -14,7 +14,18 @@ case $# in
     echo "not enough arguments supplied.  You must supply the recipeDirectory to this command."
     return 1
     ;;
-esac    
+esac
+
+# update or insert a top-level string-valued key in a JSON file. jq is already a
+# hard dependency of this script (it derives CHILD_RECIPES below), so use it
+# directly rather than carrying uploadRecipe.sh's python3/awk fallbacks.
+upsert_json() {
+  KEY="$1"
+  VALUE="$2"
+  FILE="$3"
+  tmp=$(mktemp)
+  jq --arg k "$KEY" --arg v "$VALUE" '.[$k] = $v' "$FILE" > "$tmp" && mv "$tmp" "$FILE"
+}
 
 CHILD_RECIPES=$(jq -r '.bindings | .. | select(type == "object" and has("recipeId") and .variableType == "recipeExecution") | .recipeId | sub("(_[0-9]+){3}$"; "")' $METARECIPE/metadata.json)
 
@@ -35,8 +46,30 @@ else
     for i in $METARECIPE $CHILD_RECIPES; do
       echo $i
       #based on uploadRecipe.sh
+      # Build a throwaway, uploadable copy of this recipe. Every transform below
+      # runs against the staged copy, so the uploaded artifact can differ from
+      # disk without ever modifying your local working tree.
+      STAGING=$(mktemp -d)
+      mkdir -p "${STAGING}/$(dirname "$i")"
+      cp -R "$i" "${STAGING}/${i}"
+
+      # When uploading to a recipe development server, widen the version
+      # compatibility range so every recipe (parent and children) is always
+      # selectable there. Edits the staged copy only.
+      case "$ENVIRONMENT" in
+        amanda|testing-manual)
+          if [ -f "${STAGING}/${i}/metadata.json" ]; then
+            upsert_json "minVersion" "1.0.0" "${STAGING}/${i}/metadata.json"
+            upsert_json "maxVersion" "100.0.0" "${STAGING}/${i}/metadata.json"
+            echo "Set minVersion to 1.0.0 and maxVersion to 100.0.0 in the uploaded ${i}/metadata.json because you are uploading to a recipe development server (${ENVIRONMENT}). Your local copy is left unchanged."
+          fi
+          ;;
+      esac
+
       [ -e "${i}.zip" ] && rm ${i}.zip
-      zip -r ${i}.zip $i
+      # Zip the staged copy, preserving the same archive layout as `zip -r ${i}.zip $i`.
+      ( cd "$STAGING" && zip -r "${STAGING}/upload.zip" "$i" )
+      mv "${STAGING}/upload.zip" "${i}.zip"
       http_response=$(curl $CURL_ARGS -s -o ${i}.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${i}" "$HOST/ihub-viewer/repository/recipes" --data-binary "@${i}.zip")
       if [ $http_response != "200" ];
       then
@@ -50,6 +83,8 @@ else
         fi
         cat ${i}.txt
         rm ${i}.txt
+        [ -e ${i}.zip ] && rm ${i}.zip
+        rm -rf "$STAGING"
         ERRORS_FOUND=true
         break
       else
@@ -63,6 +98,7 @@ else
         RESPONSES+=$(< ${i}.txt)
         [ -e ${i}.txt ] && rm ${i}.txt
         rm ${i}.zip
+        rm -rf "$STAGING"
       fi
     done
     if [ "$ERRORS_FOUND" = false ]; then
