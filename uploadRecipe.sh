@@ -118,7 +118,20 @@ then
 	rm -rf "$STAGING"
 	return 1
 else
-	http_response=$(curl $CURL_ARGS -s -o uploadRecipeResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${FLOW}" "$HOST/ihub-viewer/repository/recipes" --data-binary "@${FLOW}.zip")
+	UPLOAD_URL="$HOST/ihub-viewer/repository/recipes"
+	# TEMPORARY workaround for an upstream Flow strict-upload bug: strict
+	# validation rejects widget-type Universal API recipes whose child bindingsIn
+	# references a parent binding created via bindingsOut (e.g.
+	# 'calcedDataFlowName'), returning a 400. Setting SIMULATE_INSTALL=true routes
+	# the upload through Flow's lenient install-from-remote path to bypass it.
+	# WARNING: that path SILENTLY DROPS bindings/JSON Flow deems malformed, so a
+	# 200 here does NOT mean the recipe is intact -- verify the uploaded recipe
+	# actually works at runtime. Remove this block once the upstream fix lands.
+	if [ "$SIMULATE_INSTALL" = "true" ]; then
+		UPLOAD_URL="${UPLOAD_URL}?simulateInstall=true"
+		echo "SIMULATE_INSTALL=true: uploading via Flow's lenient install path (?simulateInstall=true). Malformed bindings/JSON may be silently dropped -- verify the recipe works at runtime, not just that this upload returns 200."
+	fi
+	http_response=$(curl $CURL_ARGS -s -o uploadRecipeResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${FLOW}" "$UPLOAD_URL" --data-binary "@${FLOW}.zip")
 fi
 if [ "$http_response" != "200" ];
 then
