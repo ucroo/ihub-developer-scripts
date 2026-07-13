@@ -24,7 +24,12 @@ upsert_json() {
   VALUE="$2"
   FILE="$3"
   tmp=$(mktemp)
-  jq --arg k "$KEY" --arg v "$VALUE" '.[$k] = $v' "$FILE" > "$tmp" && mv "$tmp" "$FILE"
+  if jq --arg k "$KEY" --arg v "$VALUE" '.[$k] = $v' "$FILE" > "$tmp"; then
+    mv "$tmp" "$FILE"
+  else
+    rm -f "$tmp"
+    return 1
+  fi
 }
 
 CHILD_RECIPES=$(jq -r '.bindings | .. | select(type == "object" and has("recipeId") and .variableType == "recipeExecution") | .recipeId | sub("(_[0-9]+){3}$"; "")' $METARECIPE/metadata.json)
@@ -59,9 +64,12 @@ else
       case "$ENVIRONMENT" in
         amanda|testing-manual)
           if [ -f "${STAGING}/${i}/metadata.json" ]; then
-            upsert_json "minVersion" "1.0.0" "${STAGING}/${i}/metadata.json"
-            upsert_json "maxVersion" "100.0.0" "${STAGING}/${i}/metadata.json"
-            echo "Set minVersion to 1.0.0 and maxVersion to 100.0.0 in the uploaded ${i}/metadata.json because you are uploading to a recipe development server (${ENVIRONMENT}). Your local copy is left unchanged."
+            if upsert_json "minVersion" "1.0.0" "${STAGING}/${i}/metadata.json" \
+              && upsert_json "maxVersion" "100.0.0" "${STAGING}/${i}/metadata.json"; then
+              echo "Set minVersion to 1.0.0 and maxVersion to 100.0.0 in the uploaded ${i}/metadata.json because you are uploading to a recipe development server (${ENVIRONMENT}). Your local copy is left unchanged."
+            else
+              echo "Warning: could not set minVersion/maxVersion in ${i}/metadata.json (invalid JSON?). Uploading it unmodified."
+            fi
           fi
           ;;
       esac
