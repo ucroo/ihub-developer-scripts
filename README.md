@@ -8,7 +8,7 @@ If you're on windows, you may also need to add a zip command to your bash interp
 
 You should execute these scripts from the root of the ihub-partner-? repos
 
-These scripts require that you create a creds folder (by default, in ~/creds - please remember that this will hold credentials, so put it in a safe place. If you override the location of the creds directory, please modify setEnvForUpload.sh to change the **$CREDS_DIR** location), which contains filesets for each of the flow servers you want to interact with:
+These scripts require that you create a creds folder (by default, in `~/creds` - please remember that this will hold credentials, so put it in a safe place). Set `IHUB_CREDS_DIR` to override that location without modifying the scripts. The folder contains filesets for each of the flow servers you want to interact with:
 
 ### **$ALIAS**.token
 
