@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 FLOW="$1"
 ENVIRONMENT="$2"
 case $# in
@@ -10,7 +12,7 @@ case $# in
     ;;
   *)
     echo "not enough arguments supplied.  You must supply the recipeDirectory to this command."
-    return 1
+    exit 1
     ;;
 esac
 
@@ -108,7 +110,7 @@ case "$ENVIRONMENT" in
     ;;
 esac
 
-source setEnvForUpload.sh $ENVIRONMENT
+source "$SCRIPT_DIR/setEnvForUpload.sh" "$ENVIRONMENT"
 [ -e "${FLOW}.zip" ] && rm ${FLOW}.zip
 # Zip the staged copy, preserving the same archive layout as `zip -r ${FLOW}.zip $FLOW`.
 ( cd "$STAGING" && zip -r "${STAGING}/upload.zip" "$FLOW" )
@@ -116,7 +118,7 @@ mv "${STAGING}/upload.zip" "${FLOW}.zip"
 if [ -z $FLOW_TOKEN ] ;
 then
 	rm -rf "$STAGING"
-	return 1
+	exit 1
 else
 	http_response=$(curl $CURL_ARGS -s -o uploadRecipeResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${FLOW}" "$HOST/ihub-viewer/repository/recipes" --data-binary "@${FLOW}.zip")
 fi
