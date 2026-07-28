@@ -23,7 +23,7 @@ function usage() {
 [ "$#" -ne "0" ] || usage
 
 command=$1
-creds_dir=$HOME/creds
+creds_dir="${IHUB_CREDS_DIR:-"$HOME/creds"}"
 
 case $command in
 
