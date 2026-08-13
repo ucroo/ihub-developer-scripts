@@ -40,6 +40,12 @@ then
 	HOST="$(cat $FLOW_LOC)"
 fi
 
+# Callers build URLs as "$HOST/path", so a trailing slash in the override file
+# produces "//path". Jetty rejects that with 400 "Ambiguous URI empty segment"
+# before authentication runs, which reads like a bad token but isn't.
+API_HOST="${API_HOST%/}"
+HOST="${HOST%/}"
+
 if [ -f $FLOW_TOKEN_LOC ]
 then
 	export FLOW_TOKEN=$(cat $FLOW_TOKEN_LOC)
