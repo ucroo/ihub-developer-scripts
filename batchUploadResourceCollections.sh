@@ -24,6 +24,10 @@ done
 
 if [ -n "$errorReport" ]; then
     echo -e "Some resources failed to upload:\n$errorReport"
-else
-    echo "All resource collections uploaded successfully!"
+    # Callers check this. flow-server-provisioning runs
+    # `bash batchUploadResourceCollections.sh || warn ...`, which could never
+    # fire while this script reported failures on stdout but still exited 0.
+    exit 1
 fi
+
+echo "All resource collections uploaded successfully!"
