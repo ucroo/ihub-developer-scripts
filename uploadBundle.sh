@@ -59,13 +59,13 @@ safeFileReference () {
 }
 
 SAFE_BUNDLE=$(safeName $BUNDLE)
-rm ${SAFE_BUNDLE}.zip
+rm "${SAFE_BUNDLE}.zip"
 REFS=$(cat ${SAFE_BUNDLE}.json | jq '.. |."fileReference"? | select(. != null)')
 SAFE_REFS=""
 for FR in $REFS;
 do SAFE_REFS="$SAFE_REFS $(safeFileReference ${FR//\"/})"
 done
-zip -r ${SAFE_BUNDLE}.zip ${SAFE_BUNDLE}.json $SAFE_REFS
+zip -r "${SAFE_BUNDLE}.zip" "${SAFE_BUNDLE}.json" $SAFE_REFS
 
 if [ -z $FLOW_TOKEN ] ;
 then
@@ -88,4 +88,4 @@ else
 fi
 
 [ -e uploadBundleResponse.txt ] && rm uploadBundleResponse.txt
-rm ${SAFE_BUNDLE}.zip
+rm "${SAFE_BUNDLE}.zip"
