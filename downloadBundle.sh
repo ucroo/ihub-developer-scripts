@@ -1,4 +1,5 @@
 #!/bin/bash
+
 BUNDLE="$1"
 ENVIRONMENT="$2"
 
@@ -17,24 +18,24 @@ esac
 
 source setEnvForUpload.sh $ENVIRONMENT
 
-rm ${BUNDLE}.zip
+rm "${BUNDLE}.zip"
 
 if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	http_response=$(curl $CURL_ARGS -s -o ${BUNDLE}.zip -w "%{http_code}" -X GET -H "flow-token: $FLOW_TOKEN" "$HOST/ihub-viewer/repository/bundles?format=flow-zip&id=$BUNDLE")
+	http_response=$(curl $CURL_ARGS -s -o "${BUNDLE}.zip" -w "%{http_code}" -X GET -H "flow-token: $FLOW_TOKEN" "$HOST/ihub-viewer/repository/bundles?format=flow-zip&id=$(urlEncode "$BUNDLE")")
+	curlStatus=$?
 fi
 
-if [ $http_response != "200" ];
-then
-  if [ $http_response == "302" ];
-  then
-    echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
-  else
-    echo "Got unexpected HTTP response ${http_response}. This is likely an error."
-  fi
+_status=0
+if ! validateHttpResponse "$curlStatus" "$http_response" "$1" "${BUNDLE}.zip"; then
+  _status=1
 else
-	unzip -o ${BUNDLE}.zip > /dev/null
-	[ -e ${BUNDLE}.zip ] && rm ${BUNDLE}.zip
+	unzip -o "${BUNDLE}.zip" > /dev/null
+	[ -e "${BUNDLE}.zip" ] && rm "${BUNDLE}.zip"
+fi
+
+if [ "$_status" -ne 0 ]; then
+    $_EXIT 1
 fi
