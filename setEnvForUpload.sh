@@ -4,6 +4,13 @@ ENVIRONMENT=$1
 
 CREDS_DIR=~/creds
 
+# How the sourcing script should signal failure. BASH_SOURCE[1] is that script;
+# if it equals $0 it was executed (exit), otherwise it was sourced by something
+# else (return), as repushAllConfig.sh does. Set here so callers don't each
+# repeat it. Only ever used as a script's final statement, so control flow is
+# unchanged either way.
+[ "${BASH_SOURCE[1]}" = "$0" ] && _EXIT=exit || _EXIT=return
+
 #------------------------------------------------------------------------------
 # Validate the outcome of a curl call that captured -w "%{http_code}".
 #

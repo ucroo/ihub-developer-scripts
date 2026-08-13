@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Signal failure the same way this script already did: `return` when sourced
-# (repushAllConfig.sh sources several of these), `exit` when executed. Used
-# only as the final statement, so control flow is unchanged either way.
-[ "${BASH_SOURCE[0]}" = "$0" ] && _EXIT=exit || _EXIT=return
 #!/bin/sh
 METARECIPE="$1"
 ENVIRONMENT="$2"
