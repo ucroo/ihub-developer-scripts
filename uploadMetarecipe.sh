@@ -74,7 +74,7 @@ else
           ;;
       esac
 
-      [ -e "${i}.zip" ] && rm ${i}.zip
+      [ -e "${i}.zip" ] && rm "${i}.zip"
       # Zip the staged copy, preserving the same archive layout as `zip -r ${i}.zip $i`.
       ( cd "$STAGING" && zip -r "${STAGING}/upload.zip" "$i" )
       mv "${STAGING}/upload.zip" "${i}.zip"
@@ -91,7 +91,7 @@ else
         fi
         cat ${i}.txt
         rm ${i}.txt
-        [ -e ${i}.zip ] && rm ${i}.zip
+        [ -e "${i}.zip" ] && rm "${i}.zip"
         rm -rf "$STAGING"
         ERRORS_FOUND=true
         break
@@ -105,7 +105,7 @@ else
         RESPONSES+=$'\n'
         RESPONSES+=$(< ${i}.txt)
         [ -e ${i}.txt ] && rm ${i}.txt
-        rm ${i}.zip
+        rm "${i}.zip"
         rm -rf "$STAGING"
       fi
     done

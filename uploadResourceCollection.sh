@@ -17,8 +17,10 @@ esac
 
 source setEnvForUpload.sh $ENVIRONMENT
 
-rm ${FLOW}.zip
-zip -r ${FLOW}.zip $FLOW
+# Collection directory names can contain spaces (the name is the Flow
+# collectionId, so it cannot be renamed), which word-splits when unquoted.
+rm "${FLOW}.zip"
+zip -r "${FLOW}.zip" "$FLOW"
 
 if [ -z $FLOW_TOKEN ] ;
 then
@@ -42,4 +44,4 @@ else
 fi
 
 [ -e uploadResourceCollectionResponse.txt ] && rm uploadResourceCollectionResponse.txt
-rm ${FLOW}.zip
+rm "${FLOW}.zip"

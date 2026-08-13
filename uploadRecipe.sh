@@ -109,7 +109,7 @@ case "$ENVIRONMENT" in
 esac
 
 source setEnvForUpload.sh $ENVIRONMENT
-[ -e "${FLOW}.zip" ] && rm ${FLOW}.zip
+[ -e "${FLOW}.zip" ] && rm "${FLOW}.zip"
 # Zip the staged copy, preserving the same archive layout as `zip -r ${FLOW}.zip $FLOW`.
 ( cd "$STAGING" && zip -r "${STAGING}/upload.zip" "$FLOW" )
 mv "${STAGING}/upload.zip" "${FLOW}.zip"
@@ -133,5 +133,5 @@ else
   cat uploadRecipeResponse.txt
 fi
 [ -e uploadRecipeResponse.txt ] && rm uploadRecipeResponse.txt
-rm ${FLOW}.zip
+rm "${FLOW}.zip"
 rm -rf "$STAGING"

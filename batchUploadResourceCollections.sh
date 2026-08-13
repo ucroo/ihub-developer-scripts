@@ -10,9 +10,11 @@ cd ./src/main/flowResources || exit
 errorReport=""
 for dir in ./*; do
     if [ -d "$dir" ]; then
+        # Quote $dir: an unquoted name containing a space passes basename a
+        # second argument, which it treats as a suffix to strip.
+        resource=$(basename "$dir")
         echo -e "\nUploading collection $resource\n"
-  
-        resource=$(basename $dir)
+
         if ! uploadResourceCollection.sh "$resource" "$community" ; then
             errorReport+="$resource failed to upload.\n"
         fi
