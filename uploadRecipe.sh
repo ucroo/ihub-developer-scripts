@@ -1,4 +1,9 @@
 #!/bin/sh
+
+# Signal failure the same way this script already did: `return` when sourced
+# (repushAllConfig.sh sources several of these), `exit` when executed. Used
+# only as the final statement, so control flow is unchanged either way.
+[ "${BASH_SOURCE[0]}" = "$0" ] && _EXIT=exit || _EXIT=return
 FLOW="$1"
 ENVIRONMENT="$2"
 case $# in
@@ -119,19 +124,16 @@ then
 	return 1
 else
 	http_response=$(curl $CURL_ARGS -s -o uploadRecipeResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${FLOW}" "$HOST/ihub-viewer/repository/recipes" --data-binary "@${FLOW}.zip")
+	curlStatus=$?
 fi
-if [ "$http_response" != "200" ];
-then
-  if [ "$http_response" = "302" ];
-  then
-    echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
-  else
-    echo "Got unexpected HTTP response ${http_response}. This is likely an error."
-		cat uploadRecipeResponse.txt
-  fi
+_status=0
+if ! validateHttpResponse "$curlStatus" "$http_response" "$1" "uploadRecipeResponse.txt"; then
+  _status=1
 else
   cat uploadRecipeResponse.txt
 fi
 [ -e uploadRecipeResponse.txt ] && rm uploadRecipeResponse.txt
 rm "${FLOW}.zip"
 rm -rf "$STAGING"
+
+[ "$_status" -ne 0 ] && $_EXIT 1

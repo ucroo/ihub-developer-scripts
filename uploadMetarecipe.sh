@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# Signal failure the same way this script already did: `return` when sourced
+# (repushAllConfig.sh sources several of these), `exit` when executed. Used
+# only as the final statement, so control flow is unchanged either way.
+[ "${BASH_SOURCE[0]}" = "$0" ] && _EXIT=exit || _EXIT=return
 #!/bin/sh
 METARECIPE="$1"
 ENVIRONMENT="$2"
@@ -79,16 +84,10 @@ else
       ( cd "$STAGING" && zip -r "${STAGING}/upload.zip" "$i" )
       mv "${STAGING}/upload.zip" "${i}.zip"
       http_response=$(curl $CURL_ARGS -s -o ${i}.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${i}" "$HOST/ihub-viewer/repository/recipes" --data-binary "@${i}.zip")
-      if [ $http_response != "200" ];
-      then
-        echo "$RESPONSES"
-        printf "\n${bold}Error encountered${normal} while uploading %s. Not continuing. Error encountered: " $i
-        if [ $http_response == "302" ];
-        then
-          echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
-        else
-          echo "Got unexpected HTTP response ${http_response}. This is likely an error."
-        fi
+      curlStatus=$?
+      _status=0
+      if ! validateHttpResponse "$curlStatus" "$http_response" "$1" "${i}.txt"; then
+        _status=1
         cat ${i}.txt
         rm ${i}.txt
         [ -e "${i}.zip" ] && rm "${i}.zip"
@@ -118,3 +117,5 @@ else
     fi
   fi
 fi
+
+[ "$_status" -ne 0 ] && $_EXIT 1

@@ -4,6 +4,52 @@ ENVIRONMENT=$1
 
 CREDS_DIR=~/creds
 
+#------------------------------------------------------------------------------
+# Validate the outcome of a curl call that captured -w "%{http_code}".
+#
+# Separates three failures that all previously printed
+# "Got unexpected HTTP response ." — curl never ran, curl ran but returned
+# nothing, and a real non-200. Dumps the response body, which is where the
+# actual diagnosis lives.
+#
+# usage: http_response=$(curl ... ); curlStatus=$?
+#        validateHttpResponse "$curlStatus" "$http_response" <context> [bodyFile]
+# returns: 0 on HTTP 200, 1 otherwise
+#------------------------------------------------------------------------------
+validateHttpResponse() {
+	local curlStatus="$1"
+	local response="$2"
+	local context="${3:-request}"
+	local bodyFile="${4:-}"
+
+	if [ "$curlStatus" -ne 0 ]; then
+		echo "curl failed before any HTTP exchange for '$context' (see error above) — nothing was sent."
+		return 1
+	fi
+
+	if [ "$response" = "200" ]; then
+		return 0
+	fi
+
+	if [ -z "$response" ]; then
+		echo "No HTTP response received for '$context'; the request never completed. Check that the payload file was created."
+	elif [ "$response" = "302" ]; then
+		echo "Got unexpected HTTP response $response for '$context'. This is likely due to your token being incorrect."
+	elif [ "$response" = "401" ] || [ "$response" = "403" ]; then
+		echo "Got unexpected HTTP response $response for '$context'. The $ENVIRONMENT token is missing, expired, or lacks permission."
+	else
+		echo "Got unexpected HTTP response $response for '$context'. This is likely an error."
+	fi
+
+	if [ -n "$bodyFile" ] && [ -s "$bodyFile" ]; then
+		echo "--- response body ---"
+		cat "$bodyFile"
+		echo "--- end response body ---"
+	fi
+
+	return 1
+}
+
 CURL_ARGS="$CURL_ARGS"
 
 case $# in
