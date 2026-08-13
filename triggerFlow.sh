@@ -21,5 +21,5 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	curl $CURL_ARGS -X GET -H "flow-token: $FLOW_TOKEN" "$HOST/flows/$FLOW"
+	curl $CURL_ARGS -X GET -H "flow-token: $FLOW_TOKEN" "$HOST/flows/$(urlEncode "$FLOW")"
 fi

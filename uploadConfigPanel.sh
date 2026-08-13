@@ -1,4 +1,5 @@
 #!/bin/bash
+
 SOURCE_FILE="$1"
 ENVIRONMENT="$2"
 
@@ -22,18 +23,18 @@ then
 	return 1
 else
 	http_response=$(curl $CURL_ARGS -s -o uploadConfigPanelResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/ihub-viewer/repository/configPanels" --data-binary "@src/main/configPanels/$SOURCE_FILE.json")
+	curlStatus=$?
 fi
 
-if [ $http_response != "200" ];
-then
-  if [ $http_response == "302" ];
-  then
-    echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
-  else
-    echo "Got unexpected HTTP response ${http_response}. This is likely an error."
-  fi
+_status=0
+if ! validateHttpResponse "$curlStatus" "$http_response" "$1" "uploadConfigPanelResponse.txt"; then
+  _status=1
 else
   cat uploadConfigPanelResponse.txt
 fi
 
 [ -e uploadConfigPanelResponse.txt ] && rm uploadConfigPanelResponse.txt
+
+if [ "$_status" -ne 0 ]; then
+    $_EXIT 1
+fi

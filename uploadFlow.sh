@@ -1,4 +1,5 @@
 #!/bin/bash
+
 FLOW="$1"
 ENVIRONMENT="$2"
 
@@ -22,18 +23,18 @@ then
 	return 1
 else
 	http_response=$(curl $CURL_ARGS -s -o uploadFlowResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/ihub-viewer/repository/flows" --data-binary "@src/main/flows/$FLOW.json")
+	curlStatus=$?
 fi
 
-if [ $http_response != "200" ];
-then
-  if [ $http_response == "302" ];
-  then
-    echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
-  else
-    echo "Got unexpected HTTP response ${http_response}. This is likely an error."
-  fi
+_status=0
+if ! validateHttpResponse "$curlStatus" "$http_response" "$1" "uploadFlowResponse.txt"; then
+  _status=1
 else
   cat uploadFlowResponse.txt
 fi
 
 [ -e uploadFlowResponse.txt ] && rm uploadFlowResponse.txt
+
+if [ "$_status" -ne 0 ]; then
+    $_EXIT 1
+fi

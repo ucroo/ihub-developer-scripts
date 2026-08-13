@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #!/bin/sh
 METARECIPE="$1"
 ENVIRONMENT="$2"
@@ -74,24 +75,18 @@ else
           ;;
       esac
 
-      [ -e "${i}.zip" ] && rm ${i}.zip
+      [ -e "${i}.zip" ] && rm "${i}.zip"
       # Zip the staged copy, preserving the same archive layout as `zip -r ${i}.zip $i`.
       ( cd "$STAGING" && zip -r "${STAGING}/upload.zip" "$i" )
       mv "${STAGING}/upload.zip" "${i}.zip"
       http_response=$(curl $CURL_ARGS -s -o ${i}.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${i}" "$HOST/ihub-viewer/repository/recipes" --data-binary "@${i}.zip")
-      if [ $http_response != "200" ];
-      then
-        echo "$RESPONSES"
-        printf "\n${bold}Error encountered${normal} while uploading %s. Not continuing. Error encountered: " $i
-        if [ $http_response == "302" ];
-        then
-          echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
-        else
-          echo "Got unexpected HTTP response ${http_response}. This is likely an error."
-        fi
+      curlStatus=$?
+      _status=0
+      if ! validateHttpResponse "$curlStatus" "$http_response" "$1" "${i}.txt"; then
+        _status=1
         cat ${i}.txt
         rm ${i}.txt
-        [ -e ${i}.zip ] && rm ${i}.zip
+        [ -e "${i}.zip" ] && rm "${i}.zip"
         rm -rf "$STAGING"
         ERRORS_FOUND=true
         break
@@ -105,7 +100,7 @@ else
         RESPONSES+=$'\n'
         RESPONSES+=$(< ${i}.txt)
         [ -e ${i}.txt ] && rm ${i}.txt
-        rm ${i}.zip
+        rm "${i}.zip"
         rm -rf "$STAGING"
       fi
     done
@@ -117,4 +112,8 @@ else
       echo "$RESPONSES"
     fi
   fi
+fi
+
+if [ "$_status" -ne 0 ]; then
+    $_EXIT 1
 fi

@@ -1,4 +1,5 @@
 #!/bin/bash
+
 BUNDLE="$1"
 ENVIRONMENT="$2"
 
@@ -59,33 +60,32 @@ safeFileReference () {
 }
 
 SAFE_BUNDLE=$(safeName $BUNDLE)
-rm ${SAFE_BUNDLE}.zip
+rm "${SAFE_BUNDLE}.zip"
 REFS=$(cat ${SAFE_BUNDLE}.json | jq '.. |."fileReference"? | select(. != null)')
 SAFE_REFS=""
 for FR in $REFS;
 do SAFE_REFS="$SAFE_REFS $(safeFileReference ${FR//\"/})"
 done
-zip -r ${SAFE_BUNDLE}.zip ${SAFE_BUNDLE}.json $SAFE_REFS
+zip -r "${SAFE_BUNDLE}.zip" "${SAFE_BUNDLE}.json" $SAFE_REFS
 
 if [ -z $FLOW_TOKEN ] ;
 then
 	exit 1
 else
-	http_response=$(curl $CURL_ARGS -s -o uploadBundleResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" "$HOST/ihub-viewer/repository/bundles?format=flow-zip&id=$BUNDLE" --data-binary "@${SAFE_BUNDLE}.zip")
+	http_response=$(curl $CURL_ARGS -s -o uploadBundleResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" "$HOST/ihub-viewer/repository/bundles?format=flow-zip&id=$(urlEncode "$BUNDLE")" --data-binary "@${SAFE_BUNDLE}.zip")
+	curlStatus=$?
 fi
 
-if [ $http_response != "200" ];
-then
-  if [ $http_response == "302" ];
-  then
-    echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
-  else
-    echo "Got unexpected HTTP response ${http_response}. This is likely an error."
-		cat uploadBundleResponse.txt
-  fi
+_status=0
+if ! validateHttpResponse "$curlStatus" "$http_response" "$1" "uploadBundleResponse.txt"; then
+  _status=1
 else
   cat uploadBundleResponse.txt
 fi
 
 [ -e uploadBundleResponse.txt ] && rm uploadBundleResponse.txt
-rm ${SAFE_BUNDLE}.zip
+rm "${SAFE_BUNDLE}.zip"
+
+if [ "$_status" -ne 0 ]; then
+    $_EXIT 1
+fi

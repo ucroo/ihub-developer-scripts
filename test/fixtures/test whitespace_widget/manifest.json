@@ -1,0 +1,24 @@
+{
+  "collectionId": "test whitespace_widget",
+  "entityId": "rc:test whitespace_widget",
+  "type": "resourceCollection",
+  "resources": [
+    {
+      "resourceId": "with_space_html",
+      "resourceCollectionId": "test whitespace_widget",
+      "resourceStatusCode": 200,
+      "resourceAccessorPath": "/widgets/with space/hello.html",
+      "resourceAccessorMethod": "GET",
+      "resourceAccessorHeaders": [],
+      "resourceStateful": false,
+      "removeDefaultCachingHeaders": false,
+      "resourceHeaders": [["Content-Type", "text/html"]],
+      "resourcePath": "files/widgets/with space/hello.html",
+      "resourceDescription": "Regression fixture: spaces in the collection name and resource paths",
+      "enableConfigInterpolation": false,
+      "useVirtualThreads": true
+    }
+  ],
+  "name": "test whitespace_widget",
+  "description": "Regression fixture: spaces in the collection name and resource paths"
+}

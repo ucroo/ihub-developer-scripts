@@ -1,4 +1,5 @@
 #!/bin/sh
+
 FLOW="$1"
 ENVIRONMENT="$2"
 case $# in
@@ -109,7 +110,7 @@ case "$ENVIRONMENT" in
 esac
 
 source setEnvForUpload.sh $ENVIRONMENT
-[ -e "${FLOW}.zip" ] && rm ${FLOW}.zip
+[ -e "${FLOW}.zip" ] && rm "${FLOW}.zip"
 # Zip the staged copy, preserving the same archive layout as `zip -r ${FLOW}.zip $FLOW`.
 ( cd "$STAGING" && zip -r "${STAGING}/upload.zip" "$FLOW" )
 mv "${STAGING}/upload.zip" "${FLOW}.zip"
@@ -119,19 +120,18 @@ then
 	return 1
 else
 	http_response=$(curl $CURL_ARGS -s -o uploadRecipeResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${FLOW}" "$HOST/ihub-viewer/repository/recipes" --data-binary "@${FLOW}.zip")
+	curlStatus=$?
 fi
-if [ "$http_response" != "200" ];
-then
-  if [ "$http_response" = "302" ];
-  then
-    echo "Got unexpected HTTP response ${http_response}. This is likely due to your token being incorrect."
-  else
-    echo "Got unexpected HTTP response ${http_response}. This is likely an error."
-		cat uploadRecipeResponse.txt
-  fi
+_status=0
+if ! validateHttpResponse "$curlStatus" "$http_response" "$1" "uploadRecipeResponse.txt"; then
+  _status=1
 else
   cat uploadRecipeResponse.txt
 fi
 [ -e uploadRecipeResponse.txt ] && rm uploadRecipeResponse.txt
-rm ${FLOW}.zip
+rm "${FLOW}.zip"
 rm -rf "$STAGING"
+
+if [ "$_status" -ne 0 ]; then
+    $_EXIT 1
+fi
