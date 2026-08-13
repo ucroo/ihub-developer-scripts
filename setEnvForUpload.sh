@@ -12,6 +12,21 @@ CREDS_DIR=~/creds
 [ "${BASH_SOURCE[1]}" = "$0" ] && _EXIT=exit || _EXIT=return
 
 #------------------------------------------------------------------------------
+# Percent-encode a value for use in a URL path segment or query value.
+#
+# Entity names may contain spaces (a resource collection's directory name is
+# its collectionId), and curl rejects the whole URL with
+# "URL rejected: Malformed input to a URL function" if one is interpolated raw.
+# Uploads sidestep this by passing the name in a header; deletes, triggers and
+# ?id= callers put it in the URL and need encoding.
+#
+# usage: "$HOST/ihub-viewer/repository/flows/$(urlEncode "$FLOW")"
+#------------------------------------------------------------------------------
+urlEncode() {
+	printf '%s' "$1" | jq -sRr @uri
+}
+
+#------------------------------------------------------------------------------
 # Validate the outcome of a curl call that captured -w "%{http_code}".
 #
 # Separates three failures that all previously printed

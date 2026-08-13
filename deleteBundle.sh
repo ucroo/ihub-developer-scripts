@@ -22,7 +22,7 @@ if [ -z $FLOW_TOKEN ] ;
 then
 	return 1
 else
-	http_response=$(curl $CURL_ARGS -s -o uploadBundleResponse.txt -w "%{http_code}" -X DELETE -H "flow-token: $FLOW_TOKEN" "$HOST/ihub-viewer/repository/bundles?id=$BUNDLE")
+	http_response=$(curl $CURL_ARGS -s -o uploadBundleResponse.txt -w "%{http_code}" -X DELETE -H "flow-token: $FLOW_TOKEN" "$HOST/ihub-viewer/repository/bundles?id=$(urlEncode "$BUNDLE")")
 	curlStatus=$?
 fi
 
