@@ -36,4 +36,6 @@ else
 	[ -e "${BUNDLE}.zip" ] && rm "${BUNDLE}.zip"
 fi
 
-[ "$_status" -ne 0 ] && $_EXIT 1
+if [ "$_status" -ne 0 ]; then
+    $_EXIT 1
+fi
