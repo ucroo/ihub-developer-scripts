@@ -1,19 +1,45 @@
 #!/bin/sh
 
-FLOW="$1"
-ENVIRONMENT="$2"
-case $# in
-  2)
-    ENVIRONMENT="$2"
-    ;;
-  1)
-    ENVIRONMENT="local"
-    ;;
-  *)
-    echo "not enough arguments supplied.  You must supply the recipeDirectory to this command."
-    return 1
-    ;;
-esac
+# usage: uploadRecipe.sh <recipeDirectory> [environment] [--widen]
+#
+# --widen forces the uploaded copy to minVersion 1.0.0 / maxVersion 100.0.0,
+# overwriting whatever range the recipe declares, so it is always selectable on
+# a recipe development server. Without it, a declared range is uploaded as-is
+# and only missing bounds are filled in.
+FLOW=""
+ENVIRONMENT=""
+WIDEN_VERSIONS=false
+
+for ARG in "$@"; do
+  case "$ARG" in
+    --widen)
+      WIDEN_VERSIONS=true
+      ;;
+    -*)
+      echo "unknown option: $ARG"
+      echo "usage: uploadRecipe.sh <recipeDirectory> [environment] [--widen]"
+      return 1
+      ;;
+    *)
+      if [ -z "$FLOW" ]; then
+        FLOW="$ARG"
+      elif [ -z "$ENVIRONMENT" ]; then
+        ENVIRONMENT="$ARG"
+      else
+        echo "too many arguments supplied: $ARG"
+        echo "usage: uploadRecipe.sh <recipeDirectory> [environment] [--widen]"
+        return 1
+      fi
+      ;;
+  esac
+done
+
+if [ -z "$FLOW" ]; then
+  echo "not enough arguments supplied.  You must supply the recipeDirectory to this command."
+  return 1
+fi
+
+[ -z "$ENVIRONMENT" ] && ENVIRONMENT="local"
 
 # Build a throwaway, uploadable copy of the recipe. Every transform below runs
 # against this staged copy, so the uploaded artifact can differ from disk
@@ -78,12 +104,15 @@ with open(file, "r+") as f:
   fi
 
   # No JSON tooling available: portable awk upsert. Updates the key in place
-  # if present, otherwise inserts it right after the first opening brace.
+  # if present, otherwise inserts it right after the first opening brace. The
+  # value pattern matches a quoted string or a bare token, so a key carrying
+  # null is overwritten rather than left alone. found is driven by sub()'s own
+  # result - keying it off the name alone would skip a value it cannot match
+  # and then wrongly suppress the insert.
   tmp=$(mktemp)
   awk -v k="$KEY" -v v="$VALUE" '
-    found == 0 && index($0, "\"" k "\"") {
-      sub("\"" k "\"[[:space:]]*:[[:space:]]*\"[^\"]*\"", "\"" k "\": \"" v "\"")
-      found = 1
+    found == 0 {
+      if (sub("\"" k "\"[[:space:]]*:[[:space:]]*(\"[^\"]*\"|[^,}[:space:]]+)", "\"" k "\": \"" v "\"")) found = 1
     }
     { lines[NR] = $0 }
     brace == 0 && index($0, "{") { brace = NR }
@@ -96,18 +125,72 @@ with open(file, "r+") as f:
   ' "$FILE" > "$tmp" && mv "$tmp" "$FILE"
 }
 
-# When uploading to a recipe development server, widen the version
-# compatibility range so the recipe is always selectable there. Edits the
-# staged copy only.
-case "$ENVIRONMENT" in
-  amanda|testing-manual)
-    if [ -f "${STAGED_FLOW}/metadata.json" ]; then
-      upsert_json "minVersion" "1.0.0" "${STAGED_FLOW}/metadata.json"
-      upsert_json "maxVersion" "100.0.0" "${STAGED_FLOW}/metadata.json"
-      echo "Set minVersion to 1.0.0 and maxVersion to 100.0.0 in the uploaded metadata.json because you are uploading to a recipe development server (${ENVIRONMENT}). Your local copy is left unchanged."
+# Succeed only if a top-level key is present with a non-empty value. A key that
+# is absent, null or empty counts as missing, so it gets a default below.
+json_has_value() {
+  KEY="$1"
+  FILE="$2"
+
+  if command -v jq >/dev/null 2>&1; then
+    jq -e --arg k "$KEY" \
+      'has($k) and (.[$k] != null) and ((.[$k] | tostring) != "")' \
+      "$FILE" >/dev/null 2>&1
+    return $?
+  fi
+
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c '
+import json, sys
+
+try:
+  with open(sys.argv[1]) as f:
+    data = json.load(f)
+except Exception:
+  sys.exit(1)
+
+value = data.get(sys.argv[2])
+sys.exit(0 if value is not None and str(value).strip() != "" else 1)
+' "$FILE" "$KEY"
+    return $?
+  fi
+
+  # No JSON tooling available: match the key against a non-empty string value.
+  grep -q "\"$KEY\"[[:space:]]*:[[:space:]]*\"[^\"]\+\"" "$FILE"
+}
+
+# The flowServer rejects a recipe that declares no version compatibility range,
+# so make sure the uploaded copy always carries one. Only missing fields are
+# filled in - a range the recipe already declares is uploaded untouched unless
+# --widen was given. Edits the staged copy only.
+if [ -f "${STAGED_FLOW}/metadata.json" ]; then
+  METADATA="${STAGED_FLOW}/metadata.json"
+
+  if [ "$WIDEN_VERSIONS" = true ]; then
+    upsert_json "minVersion" "1.0.0" "$METADATA"
+    upsert_json "maxVersion" "100.0.0" "$METADATA"
+    echo "Widened the uploaded metadata.json to minVersion 1.0.0 and maxVersion 100.0.0 because --widen was given. Your local copy is left unchanged."
+  else
+    PATCHED_VERSIONS=""
+
+    if ! json_has_value "minVersion" "$METADATA"; then
+      upsert_json "minVersion" "1.0.0" "$METADATA"
+      PATCHED_VERSIONS="minVersion to 1.0.0"
     fi
-    ;;
-esac
+
+    if ! json_has_value "maxVersion" "$METADATA"; then
+      upsert_json "maxVersion" "100.0.0" "$METADATA"
+      if [ -n "$PATCHED_VERSIONS" ]; then
+        PATCHED_VERSIONS="${PATCHED_VERSIONS} and maxVersion to 100.0.0"
+      else
+        PATCHED_VERSIONS="maxVersion to 100.0.0"
+      fi
+    fi
+
+    if [ -n "$PATCHED_VERSIONS" ]; then
+      echo "Set ${PATCHED_VERSIONS} in the uploaded metadata.json because the recipe does not declare it. Your local copy is left unchanged."
+    fi
+  fi
+fi
 
 source setEnvForUpload.sh $ENVIRONMENT
 [ -e "${FLOW}.zip" ] && rm "${FLOW}.zip"
@@ -123,7 +206,7 @@ else
 	curlStatus=$?
 fi
 _status=0
-if ! validateHttpResponse "$curlStatus" "$http_response" "$1" "uploadRecipeResponse.txt"; then
+if ! validateHttpResponse "$curlStatus" "$http_response" "$FLOW" "uploadRecipeResponse.txt"; then
   _status=1
 else
   cat uploadRecipeResponse.txt
