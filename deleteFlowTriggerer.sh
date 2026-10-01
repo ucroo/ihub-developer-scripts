@@ -11,7 +11,7 @@ case $# in
     ;;
   *)
     echo "not enough arguments supplied.  You must supply the flowTriggerer and the environment to this command."
-    return 1
+    return 1 2>/dev/null || exit 1
     ;;
 esac    
 
@@ -19,7 +19,7 @@ source setEnvForUpload.sh $ENVIRONMENT
 
 if [ -z $FLOW_TOKEN ] ;
 then
-	return 1
+	return 1 2>/dev/null || exit 1
 else
 	curl $CURL_ARGS -X DELETE -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/ihub-viewer/repository/flowTriggerers?id=$(urlEncode "$TRIGGERER")" 
 fi

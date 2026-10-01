@@ -12,7 +12,7 @@ case $# in
     ;;
   *)
     echo "not enough arguments supplied.  You must supply the resourceCollection directory to this command."
-    return 1
+    return 1 2>/dev/null || exit 1
     ;;
 esac    
 
@@ -25,7 +25,7 @@ zip -r "${FLOW}.zip" "$FLOW"
 
 if [ -z $FLOW_TOKEN ] ;
 then
-	return 1
+	return 1 2>/dev/null || exit 1
 else
 	http_response=$(curl $CURL_ARGS -s -o uploadResourceCollectionResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/octet-stream" -H "format: zip" -H "name: ${FLOW}" "$HOST/ihub-viewer/repository/resourceCollections" --data-binary "@${FLOW}.zip")
 	curlStatus=$?

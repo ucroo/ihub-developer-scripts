@@ -11,7 +11,7 @@ case $# in
     ;;
   *)
     echo "not enough arguments supplied.  You must supply the filename to this command."
-    return 1
+    return 1 2>/dev/null || exit 1
     ;;
 esac    
 
@@ -19,7 +19,7 @@ source setEnvForUpload.sh $ENVIRONMENT
 
 if [ -z $FLOW_TOKEN ] ;
 then
-	return 1
+	return 1 2>/dev/null || exit 1
 else
 	curl $CURL_ARGS -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/auth/s2s/encryption/encrypt" --data-binary "@$FLOW"
 fi

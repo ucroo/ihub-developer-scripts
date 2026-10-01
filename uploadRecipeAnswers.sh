@@ -13,7 +13,7 @@ case $# in
     ;;
   *)
     echo "not enough arguments supplied.  You must supply the recipe name to this command, and the name of the json file to send."
-    return 1
+    return 1 2>/dev/null || exit 1
     ;;
 esac    
 
@@ -21,7 +21,7 @@ source setEnvForUpload.sh $ENVIRONMENT
 
 if [ -z $FLOW_TOKEN ] ;
 then
-	return 1
+	return 1 2>/dev/null || exit 1
 else
 	http_response=$(curl $CURL_ARGS -s -o uploadRecipeAnswersResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/ihub-viewer/repository/recipes/$RECIPE/execute?forceInstallAll=true" --data-binary "@$ANSWER")
 	curlStatus=$?

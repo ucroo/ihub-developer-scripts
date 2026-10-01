@@ -18,7 +18,7 @@ case $# in
     ;;
   *)
     echo "not enough arguments supplied.  You must supply the filename to this command, and the resourceId to this command."
-    return 1
+    return 1 2>/dev/null || exit 1
     ;;
 esac    
 

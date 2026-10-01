@@ -19,7 +19,7 @@ for ARG in "$@"; do
     -*)
       echo "unknown option: $ARG"
       echo "usage: uploadMetarecipe.sh <recipeDirectory> [environment] [--widen]"
-      return 1
+      return 1 2>/dev/null || exit 1
       ;;
     *)
       if [ -z "$METARECIPE" ]; then
@@ -29,7 +29,7 @@ for ARG in "$@"; do
       else
         echo "too many arguments supplied: $ARG"
         echo "usage: uploadMetarecipe.sh <recipeDirectory> [environment] [--widen]"
-        return 1
+        return 1 2>/dev/null || exit 1
       fi
       ;;
   esac
@@ -37,7 +37,7 @@ done
 
 if [ -z "$METARECIPE" ]; then
   echo "not enough arguments supplied.  You must supply the recipeDirectory to this command."
-  return 1
+  return 1 2>/dev/null || exit 1
 fi
 
 [ -z "$ENVIRONMENT" ] && ENVIRONMENT="local"
@@ -125,7 +125,7 @@ else
    source setEnvForUpload.sh $ENVIRONMENT
   if [ -z $FLOW_TOKEN ] ;
   then
-    return 1
+    return 1 2>/dev/null || exit 1
   else
     RESPONSES=$'\nNone of the recipes required by this metarecipe were uploaded successfully:'
     bold=$(tput bold)

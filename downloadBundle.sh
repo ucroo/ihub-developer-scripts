@@ -12,7 +12,7 @@ case $# in
     ;;
   *)
     echo "not enough arguments supplied.  You must supply the bundle directory to this command."
-    return 1
+    return 1 2>/dev/null || exit 1
     ;;
 esac    
 
@@ -22,7 +22,7 @@ rm "${BUNDLE}.zip"
 
 if [ -z $FLOW_TOKEN ] ;
 then
-	return 1
+	return 1 2>/dev/null || exit 1
 else
 	http_response=$(curl $CURL_ARGS -s -o "${BUNDLE}.zip" -w "%{http_code}" -X GET -H "flow-token: $FLOW_TOKEN" "$HOST/ihub-viewer/repository/bundles?format=flow-zip&id=$(urlEncode "$BUNDLE")")
 	curlStatus=$?
