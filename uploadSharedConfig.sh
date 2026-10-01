@@ -12,7 +12,7 @@ case $# in
     ;;
   *)
     echo "not enough arguments supplied.  You must supply the flowName to this command."
-    return 1
+    return 1 2>/dev/null || exit 1
     ;;
 esac    
 
@@ -20,7 +20,7 @@ source setEnvForUpload.sh $ENVIRONMENT
 
 if [ -z $FLOW_TOKEN ] ;
 then
-	return 1
+	return 1 2>/dev/null || exit 1
 else
 	http_response=$(curl $CURL_ARGS -s -o uploadSharedConfigResponse.txt -w "%{http_code}" -X POST -H "flow-token: $FLOW_TOKEN" -H "Content-Type: application/json" "$HOST/ihub-viewer/repository/sharedConfig" --data-binary "@src/main/sharedConfig/$FLOW.json")
 	curlStatus=$?
